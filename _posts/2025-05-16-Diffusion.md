@@ -3,6 +3,6 @@ title: "Diffusion Model Deep Dive"
 date: 2025-05-16
 ---
 
-<embed src="https://github.com/martinisadad/martinisadad.github.io/blob/main/_pdf/Diffusion.pdf" type="application/pdf" width="100%" height="600">
+<embed src="../_pdf/Diffusion.pdf" type="application/pdf" width="100%" height="600">
 
-Hello world 2
+Hello world 3
