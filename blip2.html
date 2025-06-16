@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Technical Deep Dive into BLIP-2</title>
+    <!-- Chosen Palette: Indigo & Mint -->
+    <!-- Application Structure Plan: A navigation-driven, single-page application. The report is structured into logical, thematic sections (e.g., Overview, Architecture, Q-Former Deep Dive) accessible via a persistent sidebar. This modular structure is ideal for the target audience (engineers), allowing them to either learn progressively or jump directly to specific topics like Performance or Implementation. Key interactions include a clickable architecture diagram to deconstruct the model, a visual breakdown of the two-stage training process, and a dynamic bar chart for performance comparison, making the dense technical information digestible and engaging. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core BLIP-2 architecture. -> Goal: Organize/Inform. -> Viz: HTML/CSS flexbox diagram. -> Interaction: Click on a component (Vision Encoder, Q-Former, LLM) to highlight it and view a detailed explanation. -> Justification: Clearly visualizes the modular, frozen-component design which is central to BLIP-2's philosophy. -> Library: Vanilla JS.
+        - Report Info: The two-stage training process. -> Goal: Organize/Inform. -> Viz: A two-part section with distinct visual styling for each stage. -> Interaction: Static visual flow. -> Justification: Separates the two distinct training goals (Representation Learning vs. Generative Learning) for clarity. -> Library: N/A (CSS).
+        - Report Info: The Q-Former mechanism. -> Goal: Inform/Organize. -> Viz: A focused text and diagram section. -> Interaction: N/A. -> Justification: The Q-Former is the core innovation and requires a dedicated, detailed explanation of its role as an information bottleneck. -> Library: N/A.
+        - Report Info: Performance vs. other models. -> Goal: Compare. -> Viz: Bar chart. -> Interaction: Buttons to toggle model data on/off for customized comparison against Flamingo and others. -> Justification: Provides a clear, quantitative view of BLIP-2's impressive efficiency and performance. -> Library: Chart.js.
+        - Report Info: Practical code usage. -> Goal: Inform/Enable. -> Viz: Syntax-highlighted code block. -> Interaction: A "Copy" button. -> Justification: Gives engineers a practical, ready-to-use starting point. -> Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; scroll-behavior: smooth; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #4338ca; color: white; }
+        .nav-link:not(.active):hover { background-color: #e0e7ff; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 450px; } }
+        .code-block { position: relative; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #4f46e5; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+        .code-block:hover .copy-btn { opacity: 1; }
+        .frozen-component { border: 2px dashed #9ca3af; }
+        .trainable-component { border: 2px solid #4338ca; box-shadow: 0 0 15px rgba(67, 56, 202, 0.3); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-64 bg-slate-100 border-b md:border-r border-slate-200 p-4 md:p-6 sticky top-0 md:h-screen z-10">
+            <h1 class="text-2xl font-bold text-indigo-800">BLIP-2</h1>
+            <p class="text-sm text-slate-600 mb-6">Interactive Technical Overview</p>
+            <nav id="main-nav" class="flex flex-row overflow-x-auto md:overflow-x-visible md:flex-col gap-2">
+                <a href="#overview" class="nav-link active flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🏠</span> Overview
+                </a>
+                <a href="#architecture" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🏗️</span> Architecture
+                </a>
+                <a href="#qformer" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>💡</span> Q-Former
+                </a>
+                <a href="#training" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>⚙️</span> Training
+                </a>
+                <a href="#performance" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>📊</span> Performance
+                </a>
+                <a href="#usecases" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🚀</span> Use Cases
+                </a>
+                <a href="#getting-started" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>💻</span> Get Started
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+            <div id="overview" class="content-section active">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">BLIP-2: The Efficiency Revolution</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">This section introduces the core problem BLIP-2 was designed to solve: the astronomical cost of end-to-end training for large multimodal models. You'll learn how BLIP-2 pioneered a new paradigm of efficiency by "bootstrapping" vision-language pre-training from frozen, off-the-shelf unimodal models.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">The Problem: Prohibitive Training Costs</h3>
+                        <p class="text-slate-600">As vision-language models grew, so did their training costs, demanding massive computational resources available only to a few large labs. Training these models "end-to-end" (updating all parameters from vision to language) became a major bottleneck, slowing down research and innovation.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">The Solution: Bootstrapping from Frozen Models</h3>
+                        <p class="text-slate-600">BLIP-2's breakthrough was to leverage powerful, pre-existing, and **frozen** image encoders and LLMs. Instead of training everything, it introduces a lightweight "bridge" model between them. This approach drastically reduces the number of trainable parameters, making state-of-the-art multimodal training accessible without enormous compute budgets.</p>
+                    </div>
+                </div>
+
+                 <div class="mt-8 bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 p-6 rounded-r-lg">
+                    <h3 class="text-xl font-semibold mb-2">Key Result: Efficiency Meets Performance</h3>
+                    <p>This efficient strategy delivered state-of-the-art results. Most notably, BLIP-2 outperformed the 80-billion-parameter Flamingo model on zero-shot VQA tasks by a significant margin, despite having **54 times fewer trainable parameters**. This proved that intelligent architecture could be more important than brute-force scale.</p>
+                </div>
+            </div>
+
+            <div id="architecture" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Anatomy of an Efficient LMM</h2>
+                 <p class="text-lg text-slate-600 mb-8 max-w-3xl">BLIP-2's architecture is a masterclass in modularity. It connects three distinct components, two of which are completely frozen. The magic lies in the bridge between them. Click on each component in the diagram below to understand its role and training status.</p>
+                
+                <div class="bg-white p-8 rounded-lg shadow-md border border-slate-200">
+                    <div id="architecture-diagram" class="flex flex-col md:flex-row items-center justify-around gap-4 text-center">
+                        <div id="arch-vit" class="p-4 rounded-lg cursor-pointer transition-all duration-300 frozen-component">
+                            <div class="text-2xl mb-2">👁️</div>
+                            <div class="font-semibold">Frozen Vision Encoder</div>
+                            <div class="text-xs text-slate-500">(e.g., CLIP ViT)</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                        <div id="arch-qformer" class="p-4 rounded-lg cursor-pointer transition-all duration-300 trainable-component">
+                             <div class="text-2xl mb-2">🌉</div>
+                            <div class="font-semibold">Trainable Q-Former</div>
+                            <div class="text-xs text-slate-500">(Lightweight Transformer)</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                        <div id="arch-llm" class="p-4 rounded-lg cursor-pointer transition-all duration-300 frozen-component">
+                            <div class="text-2xl mb-2">🧠</div>
+                            <div class="font-semibold">Frozen LLM</div>
+                            <div class="text-xs text-slate-500">(e.g., OPT, Flan-T5)</div>
+                        </div>
+                    </div>
+                    <div id="architecture-details" class="mt-6 p-6 bg-slate-50 rounded-lg min-h-[120px]">
+                        <p class="text-slate-600 text-center">Click a component above to see its details.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="qformer" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Deep Dive: The Q-Former</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">The Querying Transformer (Q-Former) is the architectural heart of BLIP-2 and its key innovation. It's a lightweight transformer model designed to act as an intelligent information bottleneck, connecting the frozen vision encoder to the frozen LLM.</p>
+                <div class="bg-white p-8 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">The Core Task: Information Distillation</h3>
+                        <p class="text-slate-600">A raw image encoder produces a large number of feature vectors, which can be noisy and computationally expensive for an LLM to process. The Q-Former's job is to distill this raw visual information down to a small, fixed number of output vectors (e.g., 32). It does this by using a set of learnable "query" embeddings. These queries "ask" the visual features for the most important information relevant to language.</p>
+                    </div>
+                    <div class="bg-indigo-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-indigo-800 mb-2">How it Works: A Two-Part Structure</h3>
+                        <p class="text-slate-700">The Q-Former has two transformer sub-modules that share self-attention layers:</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 text-slate-600">
+                            <li>An **Image Transformer** that interacts with the frozen vision encoder. Its learnable queries attend to the visual features to extract information.</li>
+                            <li>A **Text Transformer** that can act as both a text encoder and decoder. This allows the visual queries to also interact with text during training, forcing them to learn visual concepts that are most useful for language tasks.</li>
+                        </ul>
+                    </div>
+                     <p class="text-slate-600 pt-4">This clever design forces the Q-Former to learn a "language-aware" visual representation, effectively creating a compact summary of the image that is already primed for the LLM to understand and reason about.</p>
+                </div>
+            </div>
+
+            <div id="training" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The Two-Stage Pre-training Strategy</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">BLIP-2's training is a two-stage process where only the Q-Former is trained. This decouples learning the visual representation from learning to generate text, making the process highly efficient.</p>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Stage 1: Vision-Language Representation Learning</h3>
+                        <p class="mb-4 text-slate-600">The goal is to teach the Q-Former to extract visual features that are most relevant to the corresponding text.</p>
+                        <ul class="space-y-3 text-slate-700">
+                            <li><span class="font-semibold text-indigo-700">Goal:</span> Align vision and language.</li>
+                            <li><span class="font-semibold text-slate-500">Components:</span> Connects Q-Former to the **Frozen Vision Encoder**.</li>
+                            <li><span class="font-semibold text-purple-700">Task:</span> Trained on three objectives simultaneously:
+                                <ul class="list-decimal list-inside ml-4 mt-1 text-sm">
+                                    <li>**Image-Text Contrastive:** Make matching image-text pairs similar, non-matching pairs dissimilar.</li>
+                                    <li>**Image-Text Matching:** Predict if a text/image pair is a positive or negative match.</li>
+                                    <li>**Image-grounded Text Generation:** Generate a caption given the image.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Stage 2: Vision-to-Language Generative Learning</h3>
+                        <p class="mb-4 text-slate-600">The goal is to teach the Q-Former to produce visual representations that the LLM can use as input for generation tasks.</p>
+                         <ul class="space-y-3 text-slate-700">
+                            <li><span class="font-semibold text-indigo-700">Goal:</span> Enable visual reasoning & generation.</li>
+                            <li><span class="font-semibold text-slate-500">Components:</span> Connects the trained Q-Former (from Stage 1) to the **Frozen LLM**.</li>
+                             <li><span class="font-semibold text-purple-700">Task:</span> The model is given an image and a text prompt (e.g., "Question: What is the woman doing? Answer:"). The Q-Former extracts visual features, and the model is trained to generate the correct text response. The LLM itself remains frozen, forcing the Q-Former to adapt its output to what the LLM can understand.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="performance" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Performance Benchmarks: Punching Above Its Weight</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">BLIP-2's efficient design translates to remarkable performance. It set new state-of-the-art results on various zero-shot Visual Question Answering and Image Captioning tasks at the time of its release. Use the buttons below to compare its performance against Flamingo, a much larger model.</p>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="benchmarkChart"></canvas>
+                    </div>
+                     <div id="benchmark-controls" class="flex flex-wrap justify-center gap-2 mt-6">
+                        <p class="w-full text-center text-sm text-slate-500 mb-2">Zero-Shot VQA v2 Performance (accuracy %). Click to toggle models:</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="usecases" class="content-section">
+                 <h2 class="text-3xl font-bold mb-4 text-slate-900">What Can BLIP-2 Do?</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Thanks to its flexible pre-training, BLIP-2 excels at a range of vision-language tasks with zero-shot prompting, meaning it can perform these tasks without being explicitly fine-tuned on them.</p>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Image Captioning</h3>
+                        <p class="text-slate-600">Given an image, BLIP-2 can generate a descriptive and fluent caption. It can also do "prompted captioning" by starting the generation with a specific phrase.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Visual Question Answering (VQA)</h3>
+                        <p class="text-slate-600">The model can answer questions about an image's content, such as "How many cars are in the photo?" or "What is the man wearing?".</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Chat-like Conversation</h3>
+                        <p class="text-slate-600">By feeding the conversation history back into the prompt, BLIP-2 can engage in a multi-turn dialogue about an image, creating a conversational experience.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="getting-started" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">For the Engineer: Using BLIP-2</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Using BLIP-2 in your own projects is straightforward with the Hugging Face `transformers` library. The key components are the `Blip2Processor` for preparing inputs and the `Blip2ForConditionalGeneration` model itself.</p>
+
+                <div class="bg-slate-800 text-white p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">Python Example: Visual Question Answering</h3>
+                    <p class="text-slate-300 mb-4">This snippet shows how to load the model and processor, prepare an image and a question, and generate an answer. Note the use of `torch.float16` for memory efficiency.</p>
+                    <div class="code-block">
+                        <pre><code id="code-hf" class="language-python text-sm bg-slate-900 rounded-md p-4 block overflow-x-auto">import requests
+from PIL import Image
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
+import torch
+
+# Use GPU if available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Load the processor and model
+processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
+# Load model in half-precision for efficiency
+model = Blip2ForConditionalGeneration.from_pretrained(
+    "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16
+).to(device)
+
+# Example image and question
+img_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/demo.jpg' 
+raw_image = Image.open(requests.get(img_url, stream=True).raw).convert('RGB')
+question = "Question: what is the woman doing? Answer:"
+
+# Prepare inputs
+inputs = processor(images=raw_image, text=question, return_tensors="pt").to(device, torch.float16)
+
+# Generate output
+generated_ids = model.generate(**inputs, max_new_tokens=20)
+answer = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+print(f"Generated Answer: {answer}")
+# Expected output: a woman is sitting on the beach with a dog
+
+</code></pre>
+                        <button class="copy-btn" data-target="code-hf">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const architectureData = {
+        'arch-vit': {
+            title: '👁️ Frozen Vision Encoder',
+            description: "This is a standard, pre-trained vision model (like ViT from CLIP). Its job is to turn an image into a set of feature embeddings. Crucially, its weights are **frozen** and are not updated during BLIP-2's training. This leverages its powerful, general-purpose visual knowledge without the high cost of retraining it."
+        },
+        'arch-qformer': {
+            title: '🌉 Trainable Q-Former',
+            description: "This is the core innovation of BLIP-2. It's a lightweight transformer that acts as a bridge. It takes the many feature vectors from the vision encoder and 'distills' them into a small, fixed number of 'language-aware' visual representations. This is the **only major component trained** in the first stage."
+        },
+        'arch-llm': {
+            title: '🧠 Frozen Large Language Model (LLM)',
+            description: "This is an off-the-shelf LLM (like FlanT5 or OPT). It provides powerful reasoning and text generation capabilities. Its weights are also **frozen**. The Q-Former learns to format its visual output in a way that this frozen LLM can naturally understand and process."
+        }
+    };
+
+    const benchmarkData = {
+        labels: ['VQAv2', 'GQA', 'OK-VQA', 'NoCaps', 'COCO'],
+        models: {
+            'BLIP-2 (FlanT5-XXL)': { data: [65.0, 51.2, 53.6, 125.9, 135.7], color: 'rgba(67, 56, 202, 1)', visible: true },
+            'Flamingo-80B': { data: [56.3, 49.3, 44.7, 119.5, 131.9], color: 'rgba(217, 70, 239, 1)', visible: true },
+            'BLIP-2 (OPT-6.7B)': { data: [59.7, 47.9, 49.6, 116.1, 129.5], color: 'rgba(74, 222, 128, 1)', visible: false },
+        }
+    };
+    
+    let benchmarkChart;
+
+    function handleNavigation(e) {
+        e.preventDefault();
+        const targetId = e.currentTarget.getAttribute('href').substring(1);
+        
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const targetSection = document.getElementById(targetId);
+        if(targetSection) {
+            targetSection.classList.add('active');
+        }
+        
+        if (targetId === 'performance' && !benchmarkChart) {
+            renderBenchmarkChart();
+        }
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', handleNavigation);
+    });
+
+    const archDiagram = document.getElementById('architecture-diagram');
+    const archDetails = document.getElementById('architecture-details');
+    archDiagram.addEventListener('click', (e) => {
+        const targetComponent = e.target.closest('[id^="arch-"]');
+        if (targetComponent && architectureData[targetComponent.id]) {
+            const data = architectureData[targetComponent.id];
+            
+            document.querySelectorAll('[id^="arch-"]').forEach(el => {
+                 el.style.transform = 'scale(1)';
+                 el.style.zIndex = '1';
+            });
+            targetComponent.style.transform = 'scale(1.05)';
+            targetComponent.style.zIndex = '5';
+
+
+            archDetails.innerHTML = `<h4 class="text-lg font-semibold mb-2 text-slate-900">${data.title}</h4><p class="text-slate-700">${data.description}</p>`;
+        }
+    });
+
+    function renderBenchmarkChart() {
+        const ctx = document.getElementById('benchmarkChart').getContext('2d');
+
+        const datasets = Object.keys(benchmarkData.models)
+            .filter(modelName => benchmarkData.models[modelName].visible)
+            .map(modelName => {
+                const model = benchmarkData.models[modelName];
+                return {
+                    label: modelName,
+                    data: model.data,
+                    backgroundColor: model.color,
+                    borderColor: model.color,
+                    borderWidth: 1,
+                    borderRadius: 5,
+                };
+            });
+
+        if (benchmarkChart) {
+            benchmarkChart.destroy();
+        }
+
+        benchmarkChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: benchmarkData.labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (context) => `Benchmark: ${context[0].label}`,
+                            label: (context) => `${context.dataset.label}: ${context.parsed.y}`,
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Score (Higher is Better)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Benchmark Dataset'
+                        }
+                    }
+                }
+            }
+        });
+        
+        renderBenchmarkControls();
+    }
+    
+    function renderBenchmarkControls() {
+        const controlsContainer = document.getElementById('benchmark-controls');
+        controlsContainer.innerHTML = '<p class="w-full text-center text-sm text-slate-500 mb-2">Zero-Shot Performance. Click to toggle models:</p>';
+        Object.keys(benchmarkData.models).forEach(modelName => {
+            const model = benchmarkData.models[modelName];
+            const button = document.createElement('button');
+            button.textContent = modelName;
+            button.className = `px-3 py-1 rounded-full text-sm font-medium transition-colors ${model.visible ? 'text-white' : 'bg-slate-200 text-slate-700'}`;
+            button.style.backgroundColor = model.visible ? model.color : '';
+
+            button.addEventListener('click', () => {
+                model.visible = !model.visible;
+                renderBenchmarkChart();
+            });
+            controlsContainer.appendChild(button);
+        });
+    }
+
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.dataset.target;
+            const codeElement = document.getElementById(targetId);
+            const textToCopy = codeElement.innerText;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                e.currentTarget.textContent = 'Copied!';
+                setTimeout(() => {
+                    e.currentTarget.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textarea);
+        });
+    });
+    
+    // Initial render for the default active tab
+    if (document.querySelector('.content-section.active#performance')) {
+        renderBenchmarkChart();
+    }
+});
+</script>
+</body>
+</html>
