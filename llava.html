@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Technical Deep Dive into LLaVA</title>
+    <!-- Chosen Palette: Slate & Sage -->
+    <!-- Application Structure Plan: A navigation-driven SPA. The dense report is broken into thematic sections (Overview, Architecture, Training, Evolution, etc.) accessible via a persistent sidebar. This allows the target audience (engineers) to either follow a linear path or jump directly to topics of interest like Benchmarks or Implementation. This non-linear, organized structure prevents information overload from a long scroll and facilitates targeted learning. Key interactions include a clickable architecture diagram, a filterable table of model variants, and a dynamic bar chart for benchmark comparisons, making data exploration more engaging and intuitive than static text. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core LLaVA architecture. -> Goal: Organize/Inform. -> Viz: HTML/CSS flexbox diagram. -> Interaction: Click component to show/hide details. -> Justification: Connects visual structure to textual explanation directly and interactively. -> Library: Vanilla JS.
+        - Report Info: Two-stage training process. -> Goal: Organize/Inform. -> Viz: HTML/CSS two-column flow diagram with icons. -> Interaction: Hover effects for emphasis. -> Justification: Visually simplifies a complex, sequential process. -> Library: N/A (CSS).
+        - Report Info: Evolution of LLaVA versions. -> Goal: Change. -> Viz: Vertical timeline with HTML/CSS. -> Interaction: Click to expand details. -> Justification: Intuitively shows progress over time. -> Library: Vanilla JS.
+        - Report Info: Benchmark data. -> Goal: Compare. -> Viz: Bar chart. -> Interaction: Toggle datasets to compare models. -> Justification: Enables clear, user-controlled comparison of performance metrics. -> Library: Chart.js.
+        - Report Info: LLaVA variants (The "Zoo"). -> Goal: Organize/Compare. -> Viz: HTML Table. -> Interaction: Live text-based filtering. -> Justification: Allows users to quickly find specific variants from a large list. -> Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #475569; color: white; }
+        .nav-link:not(.active):hover { background-color: #e2e8f0; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 450px; } }
+        .code-block { position: relative; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #475569; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+        .code-block:hover .copy-btn { opacity: 1; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-64 bg-slate-100 border-b md:border-r border-slate-200 p-4 md:p-6 sticky top-0 md:h-screen">
+            <h1 class="text-2xl font-bold text-slate-900">LLaVA</h1>
+            <p class="text-sm text-slate-600 mb-6">Interactive Technical Overview</p>
+            <nav id="main-nav" class="flex flex-row md:flex-col gap-2">
+                <a href="#overview" class="nav-link active flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🏠</span> Overview
+                </a>
+                <a href="#architecture" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🏗️</span> Architecture
+                </a>
+                <a href="#training" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>⚙️</span> Training
+                </a>
+                <a href="#evolution" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>📈</span> Evolution
+                </a>
+                <a href="#ecosystem" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🌍</span> Ecosystem
+                </a>
+                <a href="#capabilities" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>💡</span> Capabilities
+                </a>
+                <a href="#benchmarks" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>📊</span> Benchmarks
+                </a>
+                 <a href="#limitations" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>⚠️</span> Limitations
+                </a>
+                <a href="#getting-started" class="nav-link flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🚀</span> Get Started
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+            <div id="overview" class="content-section active">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The LLaVA Breakthrough</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">This section introduces the core concepts behind LLaVA (Large Language and Vision Assistant). You'll learn about the challenges of multimodal AI and how LLaVA's key innovation, Visual Instruction Tuning, represented a major leap forward by using AI to generate its own training data, democratizing research in this field.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Beyond Text: The Multimodal Challenge</h3>
+                        <p class="text-slate-600">While Large Language Models (LLMs) master text, human understanding is multimodal (vision, sound, text). The challenge for Large Multimodal Models (LMMs) is to bridge the semantic gap between these different data types—for example, connecting the word "cat" to the pixels that form a cat in an image. This requires a deeply unified understanding of concepts across different formats.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Core Innovation: Visual Instruction Tuning</h3>
+                        <p class="text-slate-600">LLaVA's breakthrough was using a powerful text-only LLM (GPT-4) to automatically generate a massive dataset of multimodal instructions. By feeding GPT-4 text descriptions of images (captions, object coordinates), it could create complex question-and-answer pairs about images it had never "seen." This clever approach turned an LLM into a data factory, bypassing the slow and expensive process of manual annotation and making high-quality LMM training much more accessible.</p>
+                    </div>
+                </div>
+
+                 <div class="mt-8 bg-teal-50 border-l-4 border-teal-500 text-teal-800 p-6 rounded-r-lg">
+                    <h3 class="text-xl font-semibold mb-2">Significance in Open-Source AI</h3>
+                    <p>The release of LLaVA was a landmark event. It provided one of the first open-source, end-to-end trained LMMs with conversational abilities that could rival closed-source systems. By making its code, models, and data public, the LLaVA project gave the community a simple, powerful, and resource-efficient blueprint for building their own LMMs, sparking a wave of innovation.</p>
+                </div>
+            </div>
+
+            <div id="architecture" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Deconstructing the LLaVA Architecture</h2>
+                 <p class="text-lg text-slate-600 mb-8 max-w-3xl">Explore the elegant, modular design of LLaVA. Instead of being a single giant model, it intelligently connects three pre-existing components: the "eyes" (a vision encoder), the "brain" (a large language model), and a "bridge" (a projector). Click on each component in the diagram below to understand its specific role in the system.</p>
+                
+                <div class="bg-white p-8 rounded-lg shadow-md border border-slate-200">
+                    <div id="architecture-diagram" class="flex flex-col md:flex-row items-center justify-around gap-4 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="text-4xl mb-2">🖼️</div>
+                            <div class="font-semibold">Input Image</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                        <div id="arch-vit" class="p-4 rounded-lg border-2 border-transparent cursor-pointer hover:bg-slate-100 hover:border-slate-300">
+                            <div class="text-2xl mb-2">👁️</div>
+                            <div class="font-semibold">Vision Encoder</div>
+                            <div class="text-xs text-slate-500">(CLIP ViT)</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                        <div id="arch-projector" class="p-4 rounded-lg border-2 border-transparent cursor-pointer hover:bg-slate-100 hover:border-slate-300">
+                             <div class="text-2xl mb-2">🌉</div>
+                            <div class="font-semibold">Projector</div>
+                            <div class="text-xs text-slate-500">(MLP)</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                        <div id="arch-llm" class="p-4 rounded-lg border-2 border-transparent cursor-pointer hover:bg-slate-100 hover:border-slate-300">
+                            <div class="text-2xl mb-2">🧠</div>
+                            <div class="font-semibold">Language Model</div>
+                            <div class="text-xs text-slate-500">(Vicuna, etc.)</div>
+                        </div>
+                        <div class="text-2xl text-slate-400 font-light">&rarr;</div>
+                         <div class="flex flex-col items-center">
+                            <div class="text-4xl mb-2">📝</div>
+                            <div class="font-semibold">Text Output</div>
+                        </div>
+                    </div>
+                    <div id="architecture-details" class="mt-6 p-6 bg-slate-50 rounded-lg min-h-[120px]">
+                        <p class="text-slate-600 text-center">Click a component above to see its details.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="training" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The Two-Stage Training Regimen</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">LLaVA's training is a strategic two-stage process designed for maximum efficiency. It first teaches the components how to "talk" to each other (Feature Alignment), and only then fine-tunes the entire system to follow complex instructions (Instruction Fine-Tuning). This decouples the tasks and focuses computation where it's most needed.</p>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Stage 1: Feature Alignment Pre-training</h3>
+                        <p class="mb-4 text-slate-600">The goal here is simple: teach the Projector to translate visual features into a language the LLM can understand.</p>
+                        <ul class="space-y-3 text-slate-700">
+                            <li><span class="font-semibold text-sky-700">Trained:</span> Only the Projector 🌉.</li>
+                            <li><span class="font-semibold text-slate-500">Frozen:</span> Vision Encoder 👁️ and LLM 🧠.</li>
+                            <li><span class="font-semibold text-green-700">Data:</span> ~600k simple image-caption pairs.</li>
+                            <li><span class="font-semibold text-purple-700">Task:</span> Predict the caption for a given image.</li>
+                            <li><span class="font-semibold text-orange-700">Outcome:</span> A competent "modality translator."</li>
+                        </ul>
+                         <p class="text-sm mt-4 text-slate-500 bg-slate-100 p-3 rounded-md">This stage is highly efficient, taking only ~6 hours on an 8-A100 GPU node.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Stage 2: Visual Instruction Fine-tuning</h3>
+                        <p class="mb-4 text-slate-600">With alignment complete, this stage transforms the model into a helpful conversational assistant.</p>
+                        <ul class="space-y-3 text-slate-700">
+                             <li><span class="font-semibold text-sky-700">Trained:</span> The Projector 🌉 and the LLM 🧠 are fine-tuned together.</li>
+                             <li><span class="font-semibold text-slate-500">Frozen:</span> Vision Encoder 👁️ remains frozen to preserve its robust vision.</li>
+                             <li><span class="font-semibold text-green-700">Data:</span> The rich `LLaVA-Instruct-150K` dataset generated by GPT-4.</li>
+                             <li><span class="font-semibold text-purple-700">Task:</span> End-to-end training on conversational, descriptive, and reasoning tasks.</li>
+                             <li><span class="font-semibold text-orange-700">Outcome:</span> The final, instruction-following LLaVA model.</li>
+                        </ul>
+                        <p class="text-sm mt-4 text-slate-500 bg-slate-100 p-3 rounded-md">This stage is more intensive (~20 hours) but unlocks the model's advanced conversational abilities.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="evolution" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The Evolution of LLaVA</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">LLaVA has evolved rapidly, with each version methodically targeting the weaknesses of its predecessor. This timeline highlights the key improvements, primarily driven by better data mixtures and small but impactful architectural tweaks, showcasing an agile, data-centric approach to research.</p>
+
+                <div class="relative border-l-2 border-slate-300 ml-4 py-4">
+                    <div class="mb-8 pl-8 relative">
+                        <div class="absolute -left-2 top-1 w-4 h-4 bg-sky-500 rounded-full border-4 border-white"></div>
+                        <p class="text-sm font-semibold text-sky-600">April 2023</p>
+                        <h3 class="text-xl font-bold">LLaVA 1.0: The Proof of Concept</h3>
+                        <p class="text-slate-600 mt-1">Established the viability of Visual Instruction Tuning with a simple linear projector. It was impressive conversationally but weak on academic benchmarks and prone to hallucination.</p>
+                    </div>
+                    <div class="mb-8 pl-8 relative">
+                         <div class="absolute -left-2 top-1 w-4 h-4 bg-green-500 rounded-full border-4 border-white"></div>
+                        <p class="text-sm font-semibold text-green-600">October 2023</p>
+                        <h3 class="text-xl font-bold">LLaVA-1.5: The First Major Leap</h3>
+                        <p class="text-slate-600 mt-1">Achieved state-of-the-art results on 11 benchmarks with two key changes: upgrading the projector to a more expressive 2-layer MLP and augmenting training data with academic VQA datasets to improve reasoning and OCR.</p>
+                    </div>
+                    <div class="pl-8 relative">
+                         <div class="absolute -left-2 top-1 w-4 h-4 bg-purple-500 rounded-full border-4 border-white"></div>
+                        <p class="text-sm font-semibold text-purple-600">January 2024</p>
+                        <h3 class="text-xl font-bold">LLaVA-NeXT (1.6): Surpassing Gemini Pro</h3>
+                        <p class="text-slate-600 mt-1">Focused on superior reasoning and OCR. Key improvements included dynamic high-resolution image processing (4x more pixels), a better data mix with document/chart data, and support for stronger LLM backbones like Mistral-7B and Yi-34B, all while maintaining efficiency.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ecosystem" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The LLaVA Ecosystem</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">LLaVA is more than a single model; it's a foundational "chassis" for innovation. Research groups worldwide have adapted its open-source framework to create a diverse family of specialized models. This "LLaVA Zoo" highlights the most active frontiers in multimodal AI research. Use the search box to filter the variants by name or focus.</p>
+
+                <input type="text" id="variant-search" placeholder="Search variants (e.g., Video, Tool Use, High-Res)..." class="w-full p-3 mb-6 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 font-semibold text-slate-600">Variant Name</th>
+                                <th class="p-4 font-semibold text-slate-600">Key Innovation / Focus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="variants-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="capabilities" class="content-section">
+                 <h2 class="text-3xl font-bold mb-4 text-slate-900">Capabilities in Action</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">LLaVA's abilities are a direct function of its training data—specialized data leads to specialized skills. This section provides a task-based deep dive into its core capabilities, from foundational visual question answering to the frontiers of video understanding and interactive editing.</p>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">VQA & Complex Reasoning</h3>
+                        <p class="text-slate-600">LLaVA's core skill. It can answer simple questions ("What color is the car?") and perform complex inference, like identifying what's unusual in a scene. Variants like `LLaVA-o1` further improve this with structured, step-by-step reasoning.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Optical Character Recognition (OCR)</h3>
+                        <p class="text-slate-600">Once a weakness, OCR has been systematically improved by adding targeted datasets (OCRVQA, DocVQA) and increasing image resolution. Newer versions can reliably read text from signs, posters, and documents.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Video Understanding</h3>
+                        <p class="text-slate-600">A major frontier. LLaVA-NeXT showed surprising zero-shot ability by treating video frames as a large image. Dedicated models like `Video-LLaVA` and `LLaVA-NeXT-Video` now achieve SOTA performance on video-based tasks.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Grounding</h3>
+                        <p class="text-slate-600">Connecting language to specific image regions. `LLaVA-Grounding` can output bounding boxes or segmentation masks for objects it discusses, a critical step towards deeper visual intelligence.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 col-span-1 md:col-span-2">
+                        <h3 class="text-xl font-semibold mb-2">Interactivity</h3>
+                        <p class="text-slate-600">The culmination of these skills is seen in `LLaVA-Interactive`. It combines LLaVA with other models to create a system where users can talk about an image, point to an object, and have the model segment, remove, or edit it based on text commands. This shifts AI from a passive describer to an active collaborator.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="benchmarks" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">LLaVA in the Arena: Benchmarking</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">How does LLaVA stack up against the competition? This chart provides a data-driven comparison of LLaVA-NeXT against top-tier proprietary and open-source models on key multimodal benchmarks. Use the buttons below to toggle different models on and off to customize the comparison.</p>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="benchmarkChart"></canvas>
+                    </div>
+                     <div id="benchmark-controls" class="flex flex-wrap justify-center gap-2 mt-6">
+                        <p class="w-full text-center text-sm text-slate-500 mb-2">Click to toggle models in the chart:</p>
+                    </div>
+                </div>
+            </div>
+
+             <div id="limitations" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Known Limitations & Research Frontiers</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Understanding LLaVA's failure modes is as important as celebrating its successes. Because it's open source, its limitations offer a transparent look into the core challenges of building robust multimodal AI. These are not random errors but systematic artifacts of its design, guiding future research.</p>
+
+                <div class="space-y-6">
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-rose-700">Object Hallucination</h3>
+                        <p class="text-slate-600">LLaVA can sometimes describe objects, attributes, or relationships that aren't actually in the image. This often stems from strong statistical patterns in its training data (e.g., always seeing a table in a kitchen) rather than random error. Active research focuses on training with negative examples and contrastive learning to mitigate this.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-amber-700">Spatial & Quantitative Reasoning</h3>
+                        <p class="text-slate-600">The model can struggle with precise spatial relationships ("to the left of and behind") and accurate counting in cluttered scenes. This is because standard training datasets often lack the fine-grained annotations needed to learn these concepts robustly. New, specialized datasets are being created to address this gap.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-indigo-700">Language Capability Degradation</h3>
+                        <p class="text-slate-600">A subtle but critical trade-off: fine-tuning an LLM on multimodal tasks can sometimes slightly degrade its original, text-only reasoning abilities. The process shifts the model's weights to fit the new data, which can be a key consideration for practical deployment where core language intelligence is also required.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="getting-started" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">For the Engineer: Getting Started</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">One of LLaVA's most compelling features is its accessibility. You can run it on your local machine with just a few commands or integrate it into your Python applications. Here are two common ways to get started. Use the copy button to grab the code.</p>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-slate-800 text-white p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-3">1. The Easy Way: Ollama</h3>
+                        <p class="text-slate-300 mb-4">Ollama is the simplest way to run LLaVA locally. This single command downloads the model and starts an interactive command-line chat.</p>
+                        <div class="code-block">
+                            <pre><code id="code-ollama" class="language-bash text-sm bg-slate-900 rounded-md p-4 block overflow-x-auto">ollama run llava</code></pre>
+                            <button class="copy-btn" data-target="code-ollama">Copy</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 text-white p-6 rounded-lg">
+                         <h3 class="text-xl font-semibold mb-3">2. Programmatic Control: Hugging Face</h3>
+                         <p class="text-slate-300 mb-4">For use in applications, the Hugging Face `transformers` library provides full control. This Python snippet shows the basic setup.</p>
+                         <div class="code-block">
+                            <pre><code id="code-hf" class="language-python text-sm bg-slate-900 rounded-md p-4 block overflow-x-auto">from transformers import AutoProcessor, LlavaForConditionalGeneration
+import torch
+from PIL import Image
+import requests
+
+model_id = "llava-hf/llava-1.5-7b-hf"
+prompt = "USER: &lt;image&gt;\\nWhat are the things I should be cautious about when I visit here? ASSISTANT:"
+image_file = "http://images.cocodataset.org/val2017/000000039769.jpg"
+
+model = LlavaForConditionalGeneration.from_pretrained(model_id, torch_dtype=torch.float16)
+processor = AutoProcessor.from_pretrained(model_id)
+
+raw_image = Image.open(requests.get(image_file, stream=True).raw)
+inputs = processor(prompt, raw_image, return_tensors='pt').to("cuda:0", torch.float16)
+
+output = model.generate(**inputs, max_new_tokens=200)
+print(processor.decode(output[0][2:], skip_special_tokens=True))</code></pre>
+                             <button class="copy-btn" data-target="code-hf">Copy</button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const architectureData = {
+        'arch-vit': {
+            title: '👁️ The "Eyes": CLIP Vision Transformer (ViT)',
+            description: "To process images, LLaVA uses a pre-trained Vision Transformer from OpenAI's CLIP model. It takes an image, splits it into patches, and converts them into a rich numerical representation (feature embeddings). This entire component is kept **frozen** during training to preserve its powerful, general-purpose visual knowledge and reduce computational cost."
+        },
+        'arch-projector': {
+            title: '🌉 The "Bridge": Vision-Language Projector',
+            description: "This is the most critical trainable part. It's a small neural network (a 2-layer MLP in LLaVA-1.5+) whose sole job is to translate the visual features from the ViT into the same 'language' or embedding space that the LLM uses for words. It effectively makes the visual information understandable to the 'brain'."
+        },
+        'arch-llm': {
+            title: '🧠 The "Brain": Large Language Model (LLM)',
+            description: "The cognitive core of LLaVA is a pre-trained, instruction-tuned LLM, typically from the Vicuna family (a fine-tuned LLaMA). This component is responsible for all reasoning, language understanding, and text generation. It receives both the user's text prompt and the translated visual information from the projector as a single, unified input."
+        }
+    };
+
+    const variantsData = [
+        { name: 'LLaVA-1.5', focus: 'MLP Connector, Academic VQA' },
+        { name: 'LLaVA-NeXT (1.6)', focus: 'High-Resolution, Better Data Mix, OCR, Reasoning' },
+        { name: 'LLaVA-Plus', focus: 'Tool Use / Multimodal Agent' },
+        { name: 'LLaVA-HR / UHD', focus: 'High-Resolution Input, Fine-grained tasks' },
+        { name: 'MoE-LLaVA', focus: 'Efficient Sparse Mixture-of-Experts' },
+        { name: 'LLaVA-CoT / o1', focus: 'Step-by-Step Chain-of-Thought Reasoning' },
+        { name: 'LLaVA-Med', focus: 'Biomedical Domain (X-rays, etc.)' },
+        { name: 'PA-LLaVA', focus: 'Pathology Domain (Digital Slides)' },
+        { name: 'Video-LLaVA', focus: 'Unified Image and Video Understanding' },
+        { name: 'LLaVA-Grounding', focus: 'Grounded Visual Chat (Outputs Bounding Boxes/Masks)' },
+        { name: 'LLaVA-Read', focus: 'Improved OCR by integrating dedicated OCR engines' }
+    ];
+
+    const benchmarkData = {
+        labels: ['MMBench', 'MMBench-CN', 'ScienceQA (IMG)', 'MMU (val)', 'TextVQA', 'POPE'],
+        models: {
+            'LLaVA-NeXT-34B': { data: [71.5, 79.3, 73.6, 51.1, 69.5, 87.7], color: 'rgba(74, 222, 128, 1)', visible: true },
+            'Gemini Pro': { data: [70.7, null, 74.3, 47.9, null, null], color: 'rgba(96, 165, 250, 1)', visible: true },
+            'GPT-4V': { data: [71.6, null, 75.8, 56.8, null, null], color: 'rgba(192, 132, 252, 1)', visible: false },
+            'Qwen-VL-Plus': { data: [65.7, 69.2, null, 45.2, 62.1, null], color: 'rgba(251, 146, 60, 1)', visible: false },
+            'LLaVA-1.5-13B': { data: [67.8, 63.6, 71.6, 36.4, 61.3, 85.9], color: 'rgba(248, 113, 113, 1)', visible: true }
+        }
+    };
+    
+    let benchmarkChart;
+
+    function handleNavigation(e) {
+        e.preventDefault();
+        const targetId = e.currentTarget.getAttribute('href').substring(1);
+        
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.getElementById(targetId).classList.add('active');
+        
+        if (targetId === 'benchmarks' && !benchmarkChart) {
+            renderBenchmarkChart();
+        }
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', handleNavigation);
+    });
+
+    const archDiagram = document.getElementById('architecture-diagram');
+    const archDetails = document.getElementById('architecture-details');
+    archDiagram.addEventListener('click', (e) => {
+        const targetComponent = e.target.closest('[id^="arch-"]');
+        if (targetComponent && architectureData[targetComponent.id]) {
+            const data = architectureData[targetComponent.id];
+            
+            document.querySelectorAll('[id^="arch-"]').forEach(el => {
+                el.classList.remove('bg-slate-100', 'border-slate-300');
+            });
+            targetComponent.classList.add('bg-slate-100', 'border-slate-300');
+
+            archDetails.innerHTML = `<h4 class="text-lg font-semibold mb-2 text-slate-900">${data.title}</h4><p class="text-slate-700">${data.description}</p>`;
+        }
+    });
+
+    function renderVariantsTable(filterText = '') {
+        const tableBody = document.getElementById('variants-table');
+        const filteredData = variantsData.filter(v => 
+            v.name.toLowerCase().includes(filterText.toLowerCase()) ||
+            v.focus.toLowerCase().includes(filterText.toLowerCase())
+        );
+
+        tableBody.innerHTML = filteredData.map(variant => `
+            <tr class="border-b border-slate-200 last:border-b-0 hover:bg-slate-50">
+                <td class="p-4 font-medium text-slate-800">${variant.name}</td>
+                <td class="p-4 text-slate-600">${variant.focus}</td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('variant-search').addEventListener('input', (e) => {
+        renderVariantsTable(e.target.value);
+    });
+
+    function renderBenchmarkChart() {
+        const ctx = document.getElementById('benchmarkChart').getContext('2d');
+        const controlsContainer = document.getElementById('benchmark-controls');
+
+        const datasets = Object.keys(benchmarkData.models)
+            .filter(modelName => benchmarkData.models[modelName].visible)
+            .map(modelName => {
+                const model = benchmarkData.models[modelName];
+                return {
+                    label: modelName,
+                    data: model.data,
+                    backgroundColor: model.color,
+                    borderColor: model.color,
+                    borderWidth: 1
+                };
+            });
+
+        if (benchmarkChart) {
+            benchmarkChart.destroy();
+        }
+
+        benchmarkChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: benchmarkData.labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Score (Higher is Better)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        renderBenchmarkControls();
+    }
+    
+    function renderBenchmarkControls() {
+        const controlsContainer = document.getElementById('benchmark-controls');
+        controlsContainer.innerHTML = '<p class="w-full text-center text-sm text-slate-500 mb-2">Click to toggle models in the chart:</p>';
+        Object.keys(benchmarkData.models).forEach(modelName => {
+            const model = benchmarkData.models[modelName];
+            const button = document.createElement('button');
+            button.textContent = modelName;
+            button.className = `px-3 py-1 rounded-full text-sm font-medium transition-colors ${model.visible ? 'text-white' : 'bg-slate-200 text-slate-700'}`;
+            button.style.backgroundColor = model.visible ? model.color : '';
+
+            button.addEventListener('click', () => {
+                model.visible = !model.visible;
+                renderBenchmarkChart();
+            });
+            controlsContainer.appendChild(button);
+        });
+    }
+
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.dataset.target;
+            const codeElement = document.getElementById(targetId);
+            const textToCopy = codeElement.innerText;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                e.currentTarget.textContent = 'Copied!';
+                setTimeout(() => {
+                    e.currentTarget.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textarea);
+        });
+    });
+
+    renderVariantsTable();
+});
+</script>
+</body>
+</html>
