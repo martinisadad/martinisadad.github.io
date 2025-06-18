@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Interactive Guide to Multimodal LLMs</title>
+    <!-- Chosen Palette: Emerald & Amber -->
+    <!-- Application Structure Plan: A top-down narrative SPA guiding users from foundational concepts to advanced topics. The structure follows a logical progression: 1) What is a Multimodal LLM?, 2) How are they built (Architectures), 3) How are they trained (Training Strategies), 4) A showcase of key models (Model Zoo), and 5) What's next (Challenges & Future). This linear flow is ideal for introducing a broad topic to a technical audience. Key interactions include a clickable diagram comparing architectural paradigms, a filterable timeline of major models, and tabbed content for different training objectives, making complex comparisons intuitive and manageable within a single page. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Different architectural paradigms (early/late fusion, connectors). -> Goal: Compare/Organize. -> Viz: A three-column HTML/CSS diagram. -> Interaction: Click on a paradigm to see its pros, cons, and example models. -> Justification: Visually contrasts the fundamental design philosophies in a clear, side-by-side format. -> Library: Vanilla JS.
+        - Report Info: Evolution and timeline of key models. -> Goal: Show Change. -> Viz: A vertical timeline. -> Interaction: Filter buttons (e.g., Open Source, Closed Source) to dynamically update the timeline. -> Justification: Allows users to trace the rapid evolution of the field and focus on models relevant to their interests. -> Library: Vanilla JS.
+        - Report Info: Common training objectives (contrastive, generative, etc.). -> Goal: Organize/Inform. -> Viz: Tabbed content area. -> Interaction: Click tabs to switch between explanations of different training losses. -> Justification: Neatly organizes distinct but related technical concepts without cluttering the page. -> Library: Vanilla JS.
+        - Report Info: Key models and their characteristics. -> Goal: Compare. -> Viz: An interactive card-based layout. -> Interaction: Hover effects for quick info. -> Justification: Presents a "zoo" of important models in a visually appealing and easily scannable format. -> Library: N/A (CSS).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; scroll-behavior: smooth; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #059669; color: white; }
+        .nav-link:not(.active):hover { background-color: #d1fae5; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .arch-card { border: 2px solid #d1d5db; transition: all 0.3s ease; }
+        .arch-card.active { border-color: #059669; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.1), 0 4px 6px -2px rgba(5, 150, 105, 0.05); transform: translateY(-5px); }
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn.active { color: #059669; border-color: #059669; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .timeline-item .timeline-dot { transition: all 0.2s ease; }
+        .timeline-item:hover .timeline-dot { transform: scale(1.2); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-72 bg-slate-100 border-b md:border-r border-slate-200 p-4 md:p-6 sticky top-0 md:h-screen z-10">
+            <h1 class="text-2xl font-bold text-emerald-800">Multimodal LLMs</h1>
+            <p class="text-sm text-slate-600 mb-6">An Interactive Guide</p>
+            <nav id="main-nav" class="flex flex-row overflow-x-auto md:overflow-x-visible md:flex-col gap-2">
+                <a href="#introduction" class="nav-link active flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🌍</span> Introduction
+                </a>
+                <a href="#architectures" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🏗️</span> Core Architectures
+                </a>
+                <a href="#training" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>⚙️</span> Training Strategies
+                </a>
+                <a href="#timeline" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>📈</span> Model Evolution
+                </a>
+                 <a href="#zoo" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>🐾</span> The Model Zoo
+                </a>
+                <a href="#challenges" class="nav-link flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-md text-slate-700 font-medium">
+                    <span>⚠️</span> Challenges & Future
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+            <div id="introduction" class="content-section active">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Beyond Text: The Rise of Multimodal AI</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">This section provides a high-level introduction to Multimodal Large Language Models (LLMs). We'll cover what they are, the fundamental problem they solve—bridging the "modality gap"—and why this capability represents one of the most significant frontiers in artificial intelligence today.</p>
+                
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">What is a Multimodal LLM?</h3>
+                        <p class="text-slate-600">A Multimodal LLM is an AI model that can process and reason about information from multiple data types, or "modalities," simultaneously. While a standard LLM is a master of text, a Multimodal LLM extends this mastery to include images, audio, and video. This allows it to perform tasks that are impossible with text alone, like describing what's happening in a photo, answering questions about a video clip, or creating a website from a hand-drawn sketch.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">The Core Challenge: Bridging the Modality Gap</h3>
+                        <p class="text-slate-600">The central engineering challenge is to teach a model to understand concepts in a unified way, regardless of their form. For example, the model must learn that the sequence of letters 'c-a-t' refers to the same concept as the pixels forming a furry, four-legged animal in an image. This requires bridging the "modality gap" by finding a way to represent different data types in a shared mathematical space (an embedding space) where they can be compared and processed together.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="architectures" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Architectural Paradigms: How to Build a Multimodal LLM</h2>
+                 <p class="text-lg text-slate-600 mb-8 max-w-3xl">There is no single way to build a Multimodal LLM. Different architectural philosophies have emerged, each with its own trade-offs in terms of performance, complexity, and training efficiency. The three main paradigms are defined by *when* and *how* they fuse information from different modalities. Click on each card below to explore the approach.</p>
+                
+                <div class="grid md:grid-cols-3 gap-6 text-center" id="arch-selector">
+                    <div id="arch-connector" class="arch-card p-6 rounded-lg cursor-pointer">
+                        <div class="text-4xl mb-3">🌉</div>
+                        <h3 class="text-lg font-semibold">Vision-Language Connectors</h3>
+                    </div>
+                    <div id="arch-fusion" class="arch-card p-6 rounded-lg cursor-pointer">
+                        <div class="text-4xl mb-3">🤝</div>
+                        <h3 class="text-lg font-semibold">Cross-Attention Fusion</h3>
+                    </div>
+                    <div id="arch-endtoend" class="arch-card p-6 rounded-lg cursor-pointer">
+                         <div class="text-4xl mb-3">🔄</div>
+                        <h3 class="text-lg font-semibold">End-to-End Training</h3>
+                    </div>
+                </div>
+                <div id="architecture-details" class="mt-8 bg-white p-8 rounded-lg shadow-md border border-slate-200 min-h-[200px]">
+                    <p class="text-slate-500 text-center">Select an architectural paradigm to see details.</p>
+                </div>
+            </div>
+            
+            <div id="training" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Training Strategies: Teaching Models to See</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Training a Multimodal LLM involves teaching it to align representations from different modalities. This is typically achieved by optimizing the model on a set of pre-training objectives or "losses." While many variations exist, most strategies rely on a combination of contrastive, generative, and matching objectives.</p>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <div class="border-b border-slate-200 mb-4">
+                        <nav class="-mb-px flex gap-6" id="training-tabs">
+                            <button class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-target="tab-contrastive">Contrastive Learning</button>
+                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent" data-target="tab-generative">Generative Learning</button>
+                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent" data-target="tab-matching">Matching</button>
+                        </nav>
+                    </div>
+                    <div id="training-content">
+                        <div id="tab-contrastive" class="tab-content active">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Contrastive Learning (e.g., CLIP Loss)</h3>
+                            <p class="text-slate-600">The goal is to teach the model which images and texts belong together. The model is given a batch of image-text pairs. It encodes all images and texts into a shared embedding space. The training objective is to maximize the similarity (e.g., cosine similarity) of "positive" pairs (the correct image and text) while simultaneously minimizing the similarity of all "negative" pairs (all other combinations in the batch). This effectively pulls matching pairs together and pushes mismatched pairs apart in the embedding space.</p>
+                            <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Powerful zero-shot classification and image retrieval.</p>
+                        </div>
+                        <div id="tab-generative" class="tab-content">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Generative Learning (e.g., Captioning Loss)</h3>
+                            <p class="text-slate-600">The goal is to teach the model to generate descriptive text given an image. This is a standard language modeling task. The model receives the visual features from an image and is trained to predict the corresponding text caption, one token at a time. This forces the model to learn a rich mapping from visual concepts to linguistic words and phrases, forming the basis for VQA and conversational abilities.</p>
+                             <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Image captioning, visual question answering, and conversational skills.</p>
+                        </div>
+                         <div id="tab-matching" class="tab-content">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Image-Text Matching (ITM)</h3>
+                            <p class="text-slate-600">The goal is to teach the model fine-grained alignment by having it act as a classifier. The model is given an image and a text, and must output a binary prediction: does this text accurately describe this image? This is a harder task than contrastive learning because the model must understand the full semantics of the sentence, not just a general topic. It's particularly useful for creating "hard negatives"—texts that are topically similar but factually incorrect—to refine the model's understanding.</p>
+                            <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Improved fine-grained understanding and filtering of retrieved results.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="timeline" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">A Timeline of Multimodal Evolution</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">The field of Multimodal LLMs has evolved at a breathtaking pace. This timeline highlights some of the key models and papers that have defined the field, from foundational concepts to state-of-the-art systems. Use the filters to explore different categories of models.</p>
+                
+                <div class="flex justify-center gap-2 mb-8" id="timeline-filters">
+                    <button class="filter-btn active px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium" data-filter="all">All</button>
+                    <button class="filter-btn px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-full text-sm font-medium" data-filter="open">Open Source</button>
+                    <button class="filter-btn px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-full text-sm font-medium" data-filter="closed">Closed Source</button>
+                </div>
+
+                <div id="timeline-container" class="relative border-l-2 border-slate-300 ml-4 py-4">
+                    <!-- Timeline items will be injected here by JS -->
+                </div>
+            </div>
+            
+             <div id="zoo" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Meet the Model Zoo</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">The Multimodal LLM ecosystem is diverse, with each key model making unique contributions. Here's a look at some of the most influential models and their defining characteristics.</p>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">CLIP (OpenAI)</h3>
+                        <p class="text-slate-600">Not a full LLM, but a foundational model that learned rich image-text representations via contrastive learning. Its powerful vision encoders are now a standard component in many other models, including LLaVA and BLIP-2.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Flamingo (DeepMind)</h3>
+                        <p class="text-slate-600">A pioneering large-scale model that introduced gated cross-attention layers to fuse visual and textual information. It demonstrated remarkable few-shot learning capabilities, able to adapt to new tasks with just a few examples.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">BLIP-2 (Salesforce)</h3>
+                        <p class="text-slate-600">Championed efficiency by using a lightweight Q-Former to connect frozen, off-the-shelf vision encoders and LLMs. Proved that SOTA results could be achieved with far fewer trainable parameters than end-to-end models.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">LLaVA (Open Source)</h3>
+                        <p class="text-slate-600">Democratized multimodal research with a simple yet powerful recipe: connect a frozen vision encoder to an LLM with a simple MLP projector and train it on a GPT-4-generated instruction dataset. Its simplicity and performance sparked a Cambrian explosion of open-source LMMs.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">GPT-4V (OpenAI)</h3>
+                        <p class="text-slate-600">Widely considered the state-of-the-art proprietary model. Details are scarce, but it exhibits powerful zero-shot reasoning, OCR, and instruction-following abilities across a vast range of real-world scenarios. It is trained end-to-end on an enormous scale.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">Gemini (Google)</h3>
+                        <p class="text-slate-600">Google's flagship multimodal model, designed from the ground up to be natively multimodal rather than connecting separate components. It comes in various sizes (Ultra, Pro, Nano) and shows strong performance on video and audio tasks in addition to images.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="challenges" class="content-section">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">Challenges and the Road Ahead</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Despite rapid progress, significant challenges remain on the path to truly robust and general multimodal intelligence. These challenges define the active research frontiers of the field.</p>
+
+                <div class="space-y-6">
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-amber-700">1. Data Scarcity and Quality</h3>
+                        <p class="text-slate-600">While web-scale datasets exist, they are often noisy. Creating high-quality, large-scale, and diverse instruction-following datasets is a primary bottleneck. The success of synthetic data generation (like in LLaVA) points to a promising direction, but ensuring factual accuracy and diversity in generated data remains a key challenge.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-rose-700">2. Hallucination and Faithfulness</h3>
+                        <p class="text-slate-600">Models can still "hallucinate" objects or relationships that are not present in the input, prioritizing linguistic fluency over visual truth. Improving faithfulness—ensuring the generated text is strictly grounded in the visual evidence—is a critical area of research for safety and reliability.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-indigo-700">3. The Frontier of Other Modalities</h3>
+                        <p class="text-slate-600">The field is still heavily dominated by image and text. Integrating video, audio, 3D, and other sensor data in a computationally efficient and semantically meaningful way is the next major step. This will require new architectures and training techniques to handle temporal and spatial dimensions effectively.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2 text-teal-700">4. Embodied AI and Action</h3>
+                        <p class="text-slate-600">The ultimate goal is to move from passive perception to active interaction. This involves creating embodied agents (robots) that can perceive their environment through multiple senses and take physical actions based on multimodal commands. This requires bridging the gap between digital understanding and real-world physics and robotics.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const archData = {
+        'arch-connector': {
+            title: '🌉 Vision-Language Connectors',
+            description: "This is the most popular and efficient approach in open-source models. It takes powerful, pre-trained, and **frozen** unimodal models (a vision encoder and an LLM) and connects them with a small, lightweight, trainable 'bridge' or 'projector'. The only part that needs significant training is this small connector.",
+            pros: "Extremely parameter-efficient, fast to train, leverages best-in-class frozen components.",
+            cons: "Performance is capped by the quality of the frozen models; the 'bridge' can be an information bottleneck.",
+            examples: "LLaVA, BLIP-2"
+        },
+        'arch-fusion': {
+            title: '🤝 Cross-Attention Fusion',
+            description: "This approach weaves the visual and language representations together more deeply. It injects visual information into multiple layers of the LLM using cross-attention mechanisms. This allows the LLM to refer back to the visual features at various stages of its reasoning process.",
+            pros: "Allows for richer, more fine-grained interplay between modalities.",
+            cons: "More architecturally complex and computationally expensive to train than simple connectors.",
+            examples: "Flamingo, OpenFlamingo"
+        },
+        'arch-endtoend': {
+            title: '🔄 End-to-End Native Multimodality',
+            description: "This is the most resource-intensive approach, where a single, unified transformer model is trained from the ground up on a massive corpus of interleaved image and text data. There are no separate 'unimodal' components; the model learns to process both data types natively.",
+            pros: "Potentially the most powerful and seamless approach, as it's not constrained by pre-trained components.",
+            cons: "Astronomical training costs, requires immense datasets, architecture details are often proprietary.",
+            examples: "GPT-4V, Google Gemini"
+        }
+    };
+
+    const timelineData = [
+        { year: 2021, title: 'CLIP', description: 'OpenAI releases CLIP, proving contrastive pre-training on image-text pairs can learn powerful, zero-shot visual concepts.', type: 'open' },
+        { year: 2022, title: 'Flamingo', description: 'DeepMind introduces Flamingo, using gated cross-attention to inject visual features into a frozen LLM for few-shot learning.', type: 'closed' },
+        { year: 2023, month: 'Jan', title: 'BLIP-2', description: 'Salesforce proposes the Q-Former, an efficient connector for frozen vision and language models, achieving SOTA with fewer parameters.', type: 'open' },
+        { year: 2023, month: 'Apr', title: 'LLaVA', description: 'A simple MLP connector combined with GPT-generated instruction data democratizes multimodal research.', type: 'open' },
+        { year: 2023, month: 'May', title: 'MiniGPT-4', description: 'Combines the BLIP-2 architecture with a smaller, curated dataset to enable more complex emergent behaviors.', type: 'open' },
+        { year: 2023, month: 'Sep', title: 'GPT-4V', description: 'OpenAI integrates vision capabilities into its flagship GPT-4 model, setting a new SOTA for proprietary models.', type: 'closed' },
+        { year: 2023, month: 'Dec', title: 'Gemini', description: 'Google launches its natively multimodal model family (Ultra, Pro, Nano), designed to understand various modalities from the ground up.', type: 'closed' },
+        { year: 2024, month: 'Jan', title: 'LLaVA-1.6 (NeXT)', description: 'An upgraded LLaVA surpasses Gemini Pro on several benchmarks, highlighting the power of open-source development.', type: 'open' },
+    ];
+    
+    function handleNavigation(e) {
+        e.preventDefault();
+        const targetId = e.currentTarget.getAttribute('href').substring(1);
+        
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const targetSection = document.getElementById(targetId);
+        if(targetSection) {
+            targetSection.classList.add('active');
+        }
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', handleNavigation);
+    });
+
+    // Architecture section
+    const archSelector = document.getElementById('arch-selector');
+    const archDetails = document.getElementById('architecture-details');
+    archSelector.addEventListener('click', (e) => {
+        const targetCard = e.target.closest('.arch-card');
+        if (targetCard && archData[targetCard.id]) {
+            const data = archData[targetCard.id];
+            
+            document.querySelectorAll('.arch-card').forEach(card => card.classList.remove('active'));
+            targetCard.classList.add('active');
+
+            archDetails.innerHTML = `
+                <h3 class="text-2xl font-bold text-slate-800 mb-4">${data.title}</h3>
+                <p class="text-slate-600 mb-6">${data.description}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-emerald-700 mb-1">Pros:</h4>
+                        <p class="text-sm text-slate-600">${data.pros}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-amber-700 mb-1">Cons:</h4>
+                        <p class="text-sm text-slate-600">${data.cons}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-indigo-700 mb-1">Examples:</h4>
+                        <p class="text-sm text-slate-600 font-medium">${data.examples}</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    // Training section
+    const trainingTabs = document.getElementById('training-tabs');
+    trainingTabs.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const targetId = e.target.dataset.target;
+            
+            trainingTabs.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-emerald-600');
+                btn.classList.add('text-slate-500', 'border-transparent');
+            });
+            e.target.classList.add('active', 'text-emerald-600');
+            e.target.classList.remove('text-slate-500', 'border-transparent');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(targetId).classList.add('active');
+        }
+    });
+
+    // Timeline Section
+    const timelineContainer = document.getElementById('timeline-container');
+    const timelineFilters = document.getElementById('timeline-filters');
+
+    function renderTimeline(filter = 'all') {
+        const filteredData = timelineData.filter(item => {
+            if (filter === 'all') return true;
+            return item.type === filter;
+        });
+
+        timelineContainer.innerHTML = filteredData.map(item => `
+            <div class="timeline-item mb-8 pl-8 relative">
+                <div class="timeline-dot absolute -left-2 top-1 w-4 h-4 ${item.type === 'open' ? 'bg-emerald-500' : 'bg-slate-500'} rounded-full border-4 border-white"></div>
+                <p class="text-sm font-semibold ${item.type === 'open' ? 'text-emerald-600' : 'text-slate-600'}">${item.year} ${item.month || ''}</p>
+                <h3 class="text-xl font-bold">${item.title}</h3>
+                <p class="text-slate-600 mt-1">${item.description}</p>
+            </div>
+        `).join('');
+    }
+
+    timelineFilters.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const filter = e.target.dataset.filter;
+            timelineFilters.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-600', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-700');
+            });
+            e.target.classList.add('active', 'bg-emerald-600', 'text-white');
+            e.target.classList.remove('bg-white', 'text-slate-700');
+            renderTimeline(filter);
+        }
+    });
+    
+    // Initial renders
+    renderTimeline();
+    // Set default for architecture details
+    document.getElementById('arch-connector').click();
+});
+</script>
+</body>
+</html>
