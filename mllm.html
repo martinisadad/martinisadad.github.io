@@ -105,33 +105,29 @@
             </div>
             
             <div id="training" class="content-section">
-                <h2 class="text-3xl font-bold mb-4 text-slate-900">Training Strategies: Teaching Models to See</h2>
-                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Training a Multimodal LLM involves teaching it to align representations from different modalities. This is typically achieved by optimizing the model on a set of pre-training objectives or "losses." While many variations exist, most strategies rely on a combination of contrastive, generative, and matching objectives.</p>
-
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <div class="border-b border-slate-200 mb-4">
-                        <nav class="-mb-px flex gap-6" id="training-tabs">
-                            <button class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-target="tab-contrastive">Contrastive Learning</button>
-                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent" data-target="tab-generative">Generative Learning</button>
-                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent" data-target="tab-matching">Matching</button>
-                        </nav>
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">The Two-Stage Training Regimen</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">Most modern open-source Multimodal LLMs follow an efficient two-stage training process. This strategy decouples the expensive task of learning to "see" from the task of learning to follow complex instructions, focusing compute resources where they are most effective at each stage.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Phase 1: Pre-training (PT)</h3>
+                        <p class="font-medium text-emerald-700 mb-2">Goal: Feature Alignment</p>
+                        <p class="text-slate-600 mb-4 flex-grow">Teach the Input Projector how to translate visual features into a language the LLM can understand. In this phase, both the Vision Encoder and the LLM are **frozen**.</p>
+                        <ul class="text-sm space-y-2">
+                            <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Components Trained:</span> <span class="text-slate-700">Only the small Input Projector (e.g., an MLP).</span></li>
+                            <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Data Used:</span> <span class="text-slate-700">Large-scale, simple image-text caption pairs.</span></li>
+                             <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Outcome:</span> <span class="text-slate-700">A checkpoint where visual concepts are aligned with the LLM's word embedding space.</span></li>
+                        </ul>
                     </div>
-                    <div id="training-content">
-                        <div id="tab-contrastive" class="tab-content active">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Contrastive Learning (e.g., CLIP Loss)</h3>
-                            <p class="text-slate-600">The goal is to teach the model which images and texts belong together. The model is given a batch of image-text pairs. It encodes all images and texts into a shared embedding space. The training objective is to maximize the similarity (e.g., cosine similarity) of "positive" pairs (the correct image and text) while simultaneously minimizing the similarity of all "negative" pairs (all other combinations in the batch). This effectively pulls matching pairs together and pushes mismatched pairs apart in the embedding space.</p>
-                            <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Powerful zero-shot classification and image retrieval.</p>
-                        </div>
-                        <div id="tab-generative" class="tab-content">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Generative Learning (e.g., Captioning Loss)</h3>
-                            <p class="text-slate-600">The goal is to teach the model to generate descriptive text given an image. This is a standard language modeling task. The model receives the visual features from an image and is trained to predict the corresponding text caption, one token at a time. This forces the model to learn a rich mapping from visual concepts to linguistic words and phrases, forming the basis for VQA and conversational abilities.</p>
-                             <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Image captioning, visual question answering, and conversational skills.</p>
-                        </div>
-                         <div id="tab-matching" class="tab-content">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Image-Text Matching (ITM)</h3>
-                            <p class="text-slate-600">The goal is to teach the model fine-grained alignment by having it act as a classifier. The model is given an image and a text, and must output a binary prediction: does this text accurately describe this image? This is a harder task than contrastive learning because the model must understand the full semantics of the sentence, not just a general topic. It's particularly useful for creating "hard negatives"—texts that are topically similar but factually incorrect—to refine the model's understanding.</p>
-                            <p class="mt-3 text-sm text-emerald-700 font-medium">Key Outcome: Improved fine-grained understanding and filtering of retrieved results.</p>
-                        </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-800">Phase 2: Instruction Tuning (IT)</h3>
+                        <p class="font-medium text-emerald-700 mb-2">Goal: End-to-End Fine-tuning</p>
+                        <p class="text-slate-600 mb-4 flex-grow">Teach the model to be a helpful conversational assistant that can perform complex reasoning and follow user commands about an image.</p>
+                        <ul class="text-sm space-y-2">
+                            <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Components Trained:</span> <span class="text-slate-700">The Input Projector and the LLM are trained together. The Vision Encoder remains frozen.</span></li>
+                            <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Data Used:</span> <span class="text-slate-700">High-quality, diverse, multimodal instruction-following datasets.</span></li>
+                             <li class="flex items-start"><span class="font-semibold text-slate-500 w-24 flex-shrink-0">Outcome:</span> <span class="text-slate-700">The final, capable Multimodal LLM that can perform complex VQA and dialogue.</span></li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -173,6 +169,10 @@
                         <p class="text-slate-600">Democratized multimodal research with a simple yet powerful recipe: connect a frozen vision encoder to an LLM with a simple MLP projector and train it on a GPT-4-generated instruction dataset. Its simplicity and performance sparked a Cambrian explosion of open-source LMMs.</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-2">LLaVA-o1</h3>
+                        <p class="text-slate-600">A variant trained on "observation-instruction" data to first describe an image in detail (Observe) and then follow commands, significantly improving complex reasoning and reducing hallucinations.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                         <h3 class="text-xl font-semibold mb-2">GPT-4V (OpenAI)</h3>
                         <p class="text-slate-600">Widely considered the state-of-the-art proprietary model. Details are scarce, but it exhibits powerful zero-shot reasoning, OCR, and instruction-following abilities across a vast range of real-world scenarios. It is trained end-to-end on an enormous scale.</p>
                     </div>
@@ -194,7 +194,7 @@
                     </div>
                      <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                         <h3 class="text-xl font-semibold mb-2 text-rose-700">2. Hallucination and Faithfulness</h3>
-                        <p class="text-slate-600">Models can still "hallucinate" objects or relationships that are not present in the input, prioritizing linguistic fluency over visual truth. Improving faithfulness—ensuring the generated text is strictly grounded in the visual evidence—is a critical area of research for safety and reliability.</p>
+                        <p class="text-slate-600">Models can still "hallucinate" objects or relationships that are not present in the input, prioritizing linguistic fluency over visual truth. Improving faithfulness—ensuring the generated text is strictly grounded in the visual evidence—is a critical area of research for safety and reliability. Approaches like LLaVA-o1 directly tackle this by training the model to first generate a detailed observation of the image before answering, grounding its response in verified visual evidence.</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                         <h3 class="text-xl font-semibold mb-2 text-indigo-700">3. The Frontier of Other Modalities</h3>
@@ -216,10 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const archData = {
         'arch-connector': {
             title: '🌉 Vision-Language Connectors',
-            description: "This is the most popular and efficient approach in open-source models. It takes powerful, pre-trained, and **frozen** unimodal models (a vision encoder and an LLM) and connects them with a small, lightweight, trainable 'bridge' or 'projector'. The only part that needs significant training is this small connector.",
+            description: "The most popular approach for open-source models. It takes powerful, pre-trained, and **frozen** unimodal models (a vision encoder and an LLM) and connects them with a small, lightweight, trainable 'bridge'. This bridge is the key component—typically a small Multi-Layer Perceptron (MLP) called an **Input Projector** that translates visual features into a language the LLM can understand.",
             pros: "Extremely parameter-efficient, fast to train, leverages best-in-class frozen components.",
-            cons: "Performance is capped by the quality of the frozen models; the 'bridge' can be an information bottleneck.",
-            examples: "LLaVA, BLIP-2"
+            cons: "Performance is capped by the quality of the frozen models; the projector can be an information bottleneck.",
+            examples: "LLaVA, BLIP-2, LLaVA-o1"
         },
         'arch-fusion': {
             title: '🤝 Cross-Attention Fusion',
@@ -246,7 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { year: 2023, month: 'Sep', title: 'GPT-4V', description: 'OpenAI integrates vision capabilities into its flagship GPT-4 model, setting a new SOTA for proprietary models.', type: 'closed' },
         { year: 2023, month: 'Dec', title: 'Gemini', description: 'Google launches its natively multimodal model family (Ultra, Pro, Nano), designed to understand various modalities from the ground up.', type: 'closed' },
         { year: 2024, month: 'Jan', title: 'LLaVA-1.6 (NeXT)', description: 'An upgraded LLaVA surpasses Gemini Pro on several benchmarks, highlighting the power of open-source development.', type: 'open' },
-    ];
+        { year: 2024, month: 'Jan', title: 'LLaVA-o1', description: 'Introduces observation-instruction tuning to improve step-by-step reasoning and reduce object hallucination.', type: 'open' },
+    ].sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        const monthOrder = { 'Dec':12, 'Nov':11, 'Oct':10, 'Sep':9, 'Aug':8, 'Jul':7, 'Jun':6, 'May':5, 'Apr':4, 'Mar':3, 'Feb':2, 'Jan':1};
+        return (monthOrder[b.month] || 0) - (monthOrder[a.month] || 0);
+    });
     
     function handleNavigation(e) {
         e.preventDefault();
@@ -297,26 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-        }
-    });
-
-    // Training section
-    const trainingTabs = document.getElementById('training-tabs');
-    trainingTabs.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON') {
-            const targetId = e.target.dataset.target;
-            
-            trainingTabs.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'text-emerald-600');
-                btn.classList.add('text-slate-500', 'border-transparent');
-            });
-            e.target.classList.add('active', 'text-emerald-600');
-            e.target.classList.remove('text-slate-500', 'border-transparent');
-            
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(targetId).classList.add('active');
         }
     });
 
