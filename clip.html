@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Multimodal Revolution: An Interactive Guide</title>
+    <title>The Multimodal Revolution: An Interactive Guide (Dark Theme)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,13 +12,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMVIARBEGPOJpGyr2keLtmB_soQNHZOKW4sgDhcdqc2SOIYDn" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIOvGkYEuHKS//AEcaT5ejGzavaHViMykbJq//Z2IMN66C6GtaY" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
-    <!-- Chosen Palette: Warm Neutrals & Tech Blue -->
+    <!-- Chosen Palette: Midnight Blue & Cool Grays -->
     <!-- Application Structure Plan: The application is designed as a single-page narrative, guiding users from the 'why' (pre-CLIP problems) to the 'how' (CLIP & Frozen architectures) and the 'what now' (applications, limitations, future). This story-driven, non-linear structure with a sticky navigation is better for a presentation than a simple document layout. It allows the presenter to flow through the concepts logically while enabling the audience to jump to sections of interest. Key interactions include visual diagrams that reveal information on click, a simulated zero-shot classifier for hands-on understanding, and data visualizations for impactful insights into model biases. This structure transforms a dense report into an engaging, explorable experience tailored for a technical audience. -->
     <!-- Visualization & Content Choices: 
         - Pre-CLIP Challenges: Report Info -> 3 core problems. Goal -> Inform. Viz -> Interactive cards (HTML/CSS/JS) to make dense text engaging.
         - CLIP Architecture: Report Info -> Dual encoders, contrastive loss. Goal -> Explain. Viz -> Custom interactive diagram (HTML/CSS/JS) to visually deconstruct the system. A new modal provides a deep-dive with math (KaTeX) and pseudo-code.
         - Zero-Shot Demo: Report Info -> Zero-shot classification process. Goal -> Demonstrate. Viz -> Simulated interactive demo (JS) to make an abstract concept tangible and playful.
         - Frozen Architecture: Report Info -> Frozen LLM + adapter. Goal -> Compare/Explain. Viz -> Another interactive diagram to visually contrast with CLIP. The narrative is updated to better connect this concept to CLIP as an evolution.
+        - Impact Section: Report Info -> CLIP applications. Goal -> Illustrate. Viz -> Detailed card-based layout showing how CLIP powers DALL-E, search, robotics, etc., making the abstract impact concrete.
         - Bias Statistics: Report Info -> 15% accuracy drop for BLV users. Goal -> Impact. Viz -> Bar chart (Chart.js) to make the data point powerfully and immediately visible.
         - Toolkit: Report Info -> Table of dev tools. Goal -> Organize. Viz -> Interactive HTML table with hover effects to make it more dynamic.
     -->
@@ -26,8 +27,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F8F7F4;
-            color: #1F2937;
+            background-color: #111827; /* bg-gray-900 */
+            color: #D1D5DB; /* text-gray-300 */
         }
         .nav-link {
             transition: color 0.2s;
@@ -57,7 +58,7 @@
         }
         .connector {
             position: absolute;
-            background-color: #9CA3AF;
+            background-color: #4B5563; /* bg-gray-600 */
             z-index: 0;
         }
         .chart-container {
@@ -78,39 +79,43 @@
         }
         
         .modal-body::-webkit-scrollbar { width: 8px; }
-        .modal-body::-webkit-scrollbar-track { background: #f1f1f1; }
-        .modal-body::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
-        .modal-body::-webkit-scrollbar-thumb:hover { background: #555; }
+        .modal-body::-webkit-scrollbar-track { background: #374151; } /* bg-gray-700 */
+        .modal-body::-webkit-scrollbar-thumb { background: #6B7280; border-radius: 4px; } /* bg-gray-500 */
+        .modal-body::-webkit-scrollbar-thumb:hover { background: #9CA3AF; } /* bg-gray-400 */
         
         pre code {
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
             font-size: 14px;
+        }
+        
+        .katex {
+             color: #E5E7EB; /* text-gray-200 */
         }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- Header & Navigation -->
-    <header id="header" class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+    <header id="header" class="bg-gray-900/80 backdrop-blur-lg sticky top-0 z-50 shadow-md shadow-black/20">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-800">The Multimodal Revolution</h1>
+            <h1 class="text-xl font-bold text-white">The Multimodal Revolution</h1>
             <div class="hidden md:flex space-x-8">
-                <a href="#problem" class="nav-link text-gray-600 hover:text-blue-600 font-medium">The Problem</a>
-                <a href="#breakthrough" class="nav-link text-gray-600 hover:text-blue-600 font-medium">CLIP</a>
-                <a href="#evolution" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Evolution</a>
-                <a href="#impact" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Impact</a>
-                <a href="#reality" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Reality Check</a>
+                <a href="#problem" class="nav-link text-gray-300 hover:text-blue-400 font-medium">The Problem</a>
+                <a href="#breakthrough" class="nav-link text-gray-300 hover:text-blue-400 font-medium">CLIP</a>
+                <a href="#evolution" class="nav-link text-gray-300 hover:text-blue-400 font-medium">Evolution</a>
+                <a href="#impact" class="nav-link text-gray-300 hover:text-blue-400 font-medium">Impact</a>
+                <a href="#reality" class="nav-link text-gray-300 hover:text-blue-400 font-medium">Reality Check</a>
             </div>
-            <button id="mobile-menu-button" class="md:hidden text-gray-600">
+            <button id="mobile-menu-button" class="md:hidden text-gray-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
             </button>
         </nav>
-        <div id="mobile-menu" class="hidden md:hidden bg-white">
-            <a href="#problem" class="block py-2 px-6 text-gray-600 hover:bg-gray-100">The Problem</a>
-            <a href="#breakthrough" class="block py-2 px-6 text-gray-600 hover:bg-gray-100">CLIP</a>
-            <a href="#evolution" class="block py-2 px-6 text-gray-600 hover:bg-gray-100">Evolution</a>
-            <a href="#impact" class="block py-2 px-6 text-gray-600 hover:bg-gray-100">Impact</a>
-            <a href="#reality" class="block py-2 px-6 text-gray-600 hover:bg-gray-100">Reality Check</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-gray-700">
+            <a href="#problem" class="block py-2 px-6 text-gray-300 hover:bg-gray-700">The Problem</a>
+            <a href="#breakthrough" class="block py-2 px-6 text-gray-300 hover:bg-gray-700">CLIP</a>
+            <a href="#evolution" class="block py-2 px-6 text-gray-300 hover:bg-gray-700">Evolution</a>
+            <a href="#impact" class="block py-2 px-6 text-gray-300 hover:bg-gray-700">Impact</a>
+            <a href="#reality" class="block py-2 px-6 text-gray-300 hover:bg-gray-700">Reality Check</a>
         </div>
     </header>
 
@@ -118,32 +123,32 @@
 
         <!-- Hero Section -->
         <section id="hero" class="text-center mb-24">
-            <h2 class="text-4xl md:text-6xl font-bold mb-4">From Zero-Shot Vision to Few-Shot Reasoning</h2>
-            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">An interactive guide for engineers on the paradigm shift in multimodal AI, from CLIP's breakthrough to the future of integrated reasoning.</p>
+            <h2 class="text-4xl md:text-6xl font-bold text-white mb-4">From Zero-Shot Vision to Few-Shot Reasoning</h2>
+            <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">An interactive guide for engineers on the paradigm shift in multimodal AI, from CLIP's breakthrough to the future of integrated reasoning.</p>
         </section>
 
         <!-- Section 1: The Problem -->
         <section id="problem" class="mb-24 scroll-mt-20">
             <div class="text-center mb-12">
-                <span class="text-blue-600 font-semibold">The Pre-CLIP World</span>
-                <h3 class="text-3xl md:text-4xl font-bold mt-2">A Fractured & Frustrating Landscape</h3>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto mt-4">Before 2021, building visual AI was a story of isolated successes plagued by fundamental challenges. This section explores the three core problems that CLIP was designed to solve, setting the stage for its revolutionary approach.</p>
+                <span class="text-blue-400 font-semibold">The Pre-CLIP World</span>
+                <h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">A Fractured & Frustrating Landscape</h3>
+                <p class="text-lg text-gray-400 max-w-2xl mx-auto mt-4">Before 2021, building visual AI was a story of isolated successes plagued by fundamental challenges. This section explores the three core problems that CLIP was designed to solve, setting the stage for its revolutionary approach.</p>
             </div>
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 text-center">
                     <div class="text-4xl mb-4">💰</div>
-                    <h4 class="text-xl font-semibold mb-2">Costly, Bespoke Datasets</h4>
-                    <p class="text-gray-600">The dominant paradigm required huge, manually labeled datasets like ImageNet. This was slow, expensive, and limited models to a fixed set of predefined concepts, creating an artificial ceiling on their knowledge.</p>
+                    <h4 class="text-xl font-semibold mb-2 text-white">Costly, Bespoke Datasets</h4>
+                    <p class="text-gray-400">The dominant paradigm required huge, manually labeled datasets like ImageNet. This was slow, expensive, and limited models to a fixed set of predefined concepts, creating an artificial ceiling on their knowledge.</p>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 text-center">
                     <div class="text-4xl mb-4">🎯</div>
-                    <h4 class="text-xl font-semibold mb-2">The "Fine-Tuning Trap"</h4>
-                    <p class="text-gray-600">Models were single-task experts. Adapting them for a new purpose required a full, resource-intensive cycle of data collection, labeling, and retraining. This friction created a high barrier to entry for new applications.</p>
+                    <h4 class="text-xl font-semibold mb-2 text-white">The "Fine-Tuning Trap"</h4>
+                    <p class="text-gray-400">Models were single-task experts. Adapting them for a new purpose required a full, resource-intensive cycle of data collection, labeling, and retraining. This friction created a high barrier to entry for new applications.</p>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 text-center">
                     <div class="text-4xl mb-4">📉</div>
-                    <h4 class="text-xl font-semibold mb-2">The Robustness Gap</h4>
-                    <p class="text-gray-600">Models achieved superhuman scores on benchmarks but failed in the real world. They learned to "cheat" by exploiting statistical quirks in the data, rather than learning the underlying concepts, eroding trust.</p>
+                    <h4 class="text-xl font-semibold mb-2 text-white">The Robustness Gap</h4>
+                    <p class="text-gray-400">Models achieved superhuman scores on benchmarks but failed in the real world. They learned to "cheat" by exploiting statistical quirks in the data, rather than learning the underlying concepts, eroding trust.</p>
                 </div>
             </div>
         </section>
@@ -151,27 +156,27 @@
         <!-- Section 2: The Breakthrough -->
         <section id="breakthrough" class="mb-24 scroll-mt-20">
             <div class="text-center mb-12">
-                <span class="text-blue-600 font-semibold">The CLIP Breakthrough</span>
-                <h3 class="text-3xl md:text-4xl font-bold mt-2">Learning From the World's Data</h3>
-                <p class="text-lg text-gray-600 max-w-3xl mx-auto mt-4">CLIP's elegance lies in a simple idea executed at massive scale: learn visual concepts by associating images with the text that naturally accompanies them on the internet. This section breaks down how it works and lets you try its core capability.</p>
+                <span class="text-blue-400 font-semibold">The CLIP Breakthrough</span>
+                <h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">Learning From the World's Data</h3>
+                <p class="text-lg text-gray-400 max-w-3xl mx-auto mt-4">CLIP's elegance lies in a simple idea executed at massive scale: learn visual concepts by associating images with the text that naturally accompanies them on the internet. This section breaks down how it works and lets you try its core capability.</p>
             </div>
             
             <!-- Interactive Diagram: CLIP Architecture -->
-            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 mb-12">
-                <h4 class="text-2xl font-semibold mb-2 text-center">How CLIP Learns: An Interactive View</h4>
-                <p class="text-center text-gray-600 mb-8">Click on the components to learn more.</p>
+            <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg border border-gray-700 mb-12">
+                <h4 class="text-2xl font-semibold mb-2 text-center text-white">How CLIP Learns: An Interactive View</h4>
+                <p class="text-center text-gray-400 mb-8">Click on the components to learn more.</p>
                 <div class="relative flex flex-col md:flex-row justify-around items-center h-[450px] md:h-80">
                     <div class="connector" style="width: 2px; height: 50px; top: 110px; left: 50%; transform: translateX(-50%);"></div>
                     <div class="connector" style="width: 2px; height: 50px; bottom: 110px; left: 50%; transform: translateX(-50%);"></div>
                     <div class="connector md:hidden" style="width: 2px; height: 50px; top: 250px; left: 50%; transform: translateX(-50%);"></div>
                     <div class="hidden md:block connector" style="height: 2px; width: 30%; top: 50%; left: 15%; transform: translateY(-50%);"></div>
                     <div class="hidden md:block connector" style="height: 2px; width: 30%; top: 50%; right: 15%; transform: translateY(-50%);"></div>
-                    <div id="diag-image" class="diagram-box relative z-10 bg-blue-100 border-2 border-blue-300 rounded-lg p-4 text-center w-48"><span class="text-3xl">🖼️</span><h5 class="font-semibold mt-2">Image Encoder</h5><p class="text-sm text-blue-800">(Vision Transformer)</p></div>
-                    <div id="diag-loss" class="diagram-box relative z-10 bg-green-100 border-2 border-green-300 rounded-lg p-4 text-center w-56 my-4 md:my-0"><span class="text-3xl">🎯</span><h5 class="font-semibold mt-2">Contrastive Learning</h5><p class="text-sm text-green-800">Match the correct (image, text) pairs</p></div>
-                    <div id="diag-text" class="diagram-box relative z-10 bg-purple-100 border-2 border-purple-300 rounded-lg p-4 text-center w-48"><span class="text-3xl">📝</span><h5 class="font-semibold mt-2">Text Encoder</h5><p class="text-sm text-purple-800">(Text Transformer)</p></div>
+                    <div id="diag-image" class="diagram-box relative z-10 bg-blue-900/50 border-2 border-blue-500 rounded-lg p-4 text-center w-48"><span class="text-3xl">🖼️</span><h5 class="font-semibold mt-2 text-blue-100">Image Encoder</h5><p class="text-sm text-blue-300">(Vision Transformer)</p></div>
+                    <div id="diag-loss" class="diagram-box relative z-10 bg-green-900/50 border-2 border-green-500 rounded-lg p-4 text-center w-56 my-4 md:my-0"><span class="text-3xl">🎯</span><h5 class="font-semibold mt-2 text-green-100">Contrastive Learning</h5><p class="text-sm text-green-300">Match the correct (image, text) pairs</p></div>
+                    <div id="diag-text" class="diagram-box relative z-10 bg-purple-900/50 border-2 border-purple-500 rounded-lg p-4 text-center w-48"><span class="text-3xl">📝</span><h5 class="font-semibold mt-2 text-purple-100">Text Encoder</h5><p class="text-sm text-purple-300">(Text Transformer)</p></div>
                 </div>
-                <div id="diagram-explanation" class="mt-8 p-4 bg-gray-50 rounded-lg min-h-[100px] text-center flex items-center justify-center fade-in">
-                    <p class="text-gray-700">Click a component above to see its description.</p>
+                <div id="diagram-explanation" class="mt-8 p-4 bg-gray-900 rounded-lg min-h-[100px] text-center flex items-center justify-center fade-in">
+                    <p class="text-gray-400">Click a component above to see its description.</p>
                 </div>
                 <div class="text-center mt-8">
                     <button id="show-details-btn" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
@@ -181,18 +186,18 @@
             </div>
 
             <!-- Zero-Shot Demo -->
-            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
-                 <h4 class="text-2xl font-semibold mb-2 text-center">The Zero-Shot Magic: Try It Yourself!</h4>
-                <p class="text-center text-gray-600 mb-8">This is where CLIP changed the game. No fine-tuning needed. Just describe what you're looking for. Type your own labels below and see how the model "classifies" the image.</p>
+            <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg border border-gray-700">
+                 <h4 class="text-2xl font-semibold mb-2 text-center text-white">The Zero-Shot Magic: Try It Yourself!</h4>
+                <p class="text-center text-gray-400 mb-8">This is where CLIP changed the game. No fine-tuning needed. Just describe what you're looking for. Type your own labels below and see how the model "classifies" the image.</p>
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
                         <img id="demo-image" src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=800&q=80" alt="A cat lying on a floor" class="rounded-lg shadow-md w-full">
                     </div>
                     <div>
                         <div class="space-y-4">
-                            <div><label for="prompt1" class="font-medium text-gray-700">Label 1</label><input type="text" id="prompt1" class="w-full mt-1 p-2 border border-gray-300 rounded-md" value="a photo of a cat"></div>
-                            <div><label for="prompt2" class="font-medium text-gray-700">Label 2</label><input type="text" id="prompt2" class="w-full mt-1 p-2 border border-gray-300 rounded-md" value="a photo of a dog"></div>
-                            <div><label for="prompt3" class="font-medium text-gray-700">Label 3</label><input type="text" id="prompt3" class="w-full mt-1 p-2 border border-gray-300 rounded-md" value="a photo of a remote control"></div>
+                            <div><label for="prompt1" class="font-medium text-gray-300">Label 1</label><input type="text" id="prompt1" class="w-full mt-1 p-2 border border-gray-600 bg-gray-700 text-white rounded-md" value="a photo of a cat"></div>
+                            <div><label for="prompt2" class="font-medium text-gray-300">Label 2</label><input type="text" id="prompt2" class="w-full mt-1 p-2 border border-gray-600 bg-gray-700 text-white rounded-md" value="a photo of a dog"></div>
+                            <div><label for="prompt3" class="font-medium text-gray-300">Label 3</label><input type="text" id="prompt3" class="w-full mt-1 p-2 border border-gray-600 bg-gray-700 text-white rounded-md" value="a photo of a remote control"></div>
                         </div>
                         <button id="classify-btn" class="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">Classify</button>
                         <div id="results" class="mt-6 space-y-2"></div>
@@ -204,83 +209,91 @@
         <!-- Section 3: The Evolution -->
         <section id="evolution" class="mb-24 scroll-mt-20">
             <div class="text-center mb-12">
-                <span class="text-blue-600 font-semibold">Evolution: After the Breakthrough</span>
-                <h3 class="text-3xl md:text-4xl font-bold mt-2">From Representation to Reasoning</h3>
-                <p class="text-lg text-gray-600 max-w-3xl mx-auto mt-4">
-                    CLIP's success was revolutionary, but it also raised a critical engineering question: If its core strength is creating a shared 'concept space', must we always build both encoders from scratch? As powerful, pre-trained Large Language Models (LLMs) like GPT-3 became available, researchers saw a more efficient path forward. The next leap, pioneered by models like DeepMind's <b class="font-semibold text-gray-800">Flamingo</b>, was not to replace CLIP, but to build upon its foundation. The key insight was to ask:
+                <span class="text-blue-400 font-semibold">Evolution: After the Breakthrough</span>
+                <h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">From Representation to Reasoning</h3>
+                <p class="text-lg text-gray-400 max-w-3xl mx-auto mt-4">
+                    CLIP's success was revolutionary, but it also raised a critical engineering question: If its core strength is creating a shared 'concept space', must we always build both encoders from scratch? As powerful, pre-trained Large Language Models (LLMs) like GPT-3 became available, researchers saw a more efficient path forward. The next leap, pioneered by models like DeepMind's <b class="font-semibold text-white">Flamingo</b>, was not to replace CLIP, but to build upon its foundation. The key insight was to ask:
                     <br><i class="mt-2 block">"Instead of teaching a new model to understand text, why not take a language genius—a frozen LLM—and just teach it how to see?"</i>
                     <br>This led to the "Frozen Adapter" architecture, a paradigm that keeps the massive LLM untouched and trains only a tiny, lightweight bridge to a vision encoder, unlocking far more complex reasoning with a fraction of the training cost.
                 </p>
             </div>
             <div class="grid md:grid-cols-2 gap-8 items-start">
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200"><h4 class="text-xl font-semibold mb-4 text-center">CLIP's Architecture</h4><div class="flex flex-col items-center space-y-4"><div class="bg-blue-100 border-2 border-blue-300 rounded-lg p-3 text-center w-full">Image Encoder (Trainable)</div><div class="font-bold text-2xl">+</div><div class="bg-purple-100 border-2 border-purple-300 rounded-lg p-3 text-center w-full">Text Encoder (Trainable)</div><div class="font-bold text-2xl">⬇️</div><div class="bg-green-100 border-2 border-green-300 rounded-lg p-3 text-center w-full">Trained Jointly</div></div></div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border-2 border-blue-500"><h4 class="text-xl font-semibold mb-4 text-center">The "Frozen" Successor</h4><div class="flex flex-col items-center space-y-4"><div class="bg-gray-200 border-2 border-gray-400 rounded-lg p-3 text-center w-full relative">Vision Encoder (Frozen)<span class="absolute -top-3 -right-3 text-2xl">🧊</span></div><div class="font-bold text-2xl">+</div><div class="bg-orange-200 border-2 border-orange-400 rounded-lg p-3 text-center w-full font-semibold">Adapter Module (Trainable ✨)</div><div class="font-bold text-2xl">⬇️</div><div class="bg-gray-200 border-2 border-gray-400 rounded-lg p-3 text-center w-full relative">Large Language Model (Frozen)<span class="absolute -top-3 -right-3 text-2xl">🧊</span></div></div></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700"><h4 class="text-xl font-semibold mb-4 text-center text-white">CLIP's Architecture</h4><div class="flex flex-col items-center space-y-4"><div class="bg-blue-900/50 border-2 border-blue-500 rounded-lg p-3 text-center w-full text-blue-100">Image Encoder (Trainable)</div><div class="font-bold text-2xl text-white">+</div><div class="bg-purple-900/50 border-2 border-purple-500 rounded-lg p-3 text-center w-full text-purple-100">Text Encoder (Trainable)</div><div class="font-bold text-2xl text-white">⬇️</div><div class="bg-green-900/50 border-2 border-green-500 rounded-lg p-3 text-center w-full text-green-100">Trained Jointly</div></div></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-2 border-blue-400"><h4 class="text-xl font-semibold mb-4 text-center text-white">The "Frozen" Successor</h4><div class="flex flex-col items-center space-y-4"><div class="bg-gray-700 border-2 border-gray-500 rounded-lg p-3 text-center w-full relative text-gray-300">Vision Encoder (Frozen)<span class="absolute -top-3 -right-3 text-2xl">🧊</span></div><div class="font-bold text-2xl text-white">+</div><div class="bg-orange-400/30 border-2 border-orange-400 rounded-lg p-3 text-center w-full font-semibold text-orange-100">Adapter Module (Trainable ✨)</div><div class="font-bold text-2xl text-white">⬇️</div><div class="bg-gray-700 border-2 border-gray-500 rounded-lg p-3 text-center w-full relative text-gray-300">Large Language Model (Frozen)<span class="absolute -top-3 -right-3 text-2xl">🧊</span></div></div></div>
             </div>
             <div class="mt-8 grid md:grid-cols-3 gap-6 text-center">
-                <div class="bg-gray-100 p-4 rounded-lg"><h5 class="font-semibold text-lg">✅ Parameter Efficient</h5><p class="text-sm text-gray-600">Trains <1% of total parameters, drastically cutting computational cost.</p></div>
-                <div class="bg-gray-100 p-4 rounded-lg"><h5 class="font-semibold text-lg">✅ Preserves Knowledge</h5><p class="text-sm text-gray-600">Avoids "catastrophic forgetting" by keeping the powerful LLM untouched.</p></div>
-                <div class="bg-gray-100 p-4 rounded-lg"><h5 class="font-semibold text-lg">✅ Modular & Reusable</h5><p class="text-sm text-gray-600">Engineers can plug-and-play encoders and LLMs, a familiar and desirable pattern.</p></div>
+                <div class="bg-gray-800 p-4 rounded-lg"><h5 class="font-semibold text-lg text-white">✅ Parameter Efficient</h5><p class="text-sm text-gray-400">Trains <1% of total parameters, drastically cutting computational cost.</p></div>
+                <div class="bg-gray-800 p-4 rounded-lg"><h5 class="font-semibold text-lg text-white">✅ Preserves Knowledge</h5><p class="text-sm text-gray-400">Avoids "catastrophic forgetting" by keeping the powerful LLM untouched.</p></div>
+                <div class="bg-gray-800 p-4 rounded-lg"><h5 class="font-semibold text-lg text-white">✅ Modular & Reusable</h5><p class="text-sm text-gray-400">Engineers can plug-and-play encoders and LLMs, a familiar and desirable pattern.</p></div>
             </div>
         </section>
 
         <!-- Section 4: Impact -->
         <section id="impact" class="mb-24 scroll-mt-20">
-            <div class="text-center mb-12"><span class="text-blue-600 font-semibold">Making it Real</span><h3 class="text-3xl md:text-4xl font-bold mt-2">A Practical Toolkit for Engineers</h3><p class="text-lg text-gray-600 max-w-3xl mx-auto mt-4">The true value of these models is in their application. A rich ecosystem of tools has emerged, enabling engineers to build powerful new systems for search, analysis, and accessibility.</p></div>
-            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 mb-12"><h4 class="text-2xl font-semibold mb-6 text-center">Killer Applications</h4><div class="grid md:grid-cols-3 gap-8 text-center"><div><div class="text-4xl mb-3">🔍</div><h5 class="font-semibold text-lg">Semantic Search</h5><p class="text-gray-600">Move beyond keywords. Enable users to search with descriptive language ("cozy winter sweater") or even search with an image to find visually similar products.</p></div><div><div class="text-4xl mb-3">🎬</div><h5 class="font-semibold text-lg">Video Analysis</h5><p class="text-gray-600">Treat video as a "bag of frames." Build systems to find specific scenes ("all clips with a construction site") or identify when objects appear within a video archive.</p></div><div><div class="text-4xl mb-3">🌐</div><h5 class="font-semibold text-lg">Accessibility</h5><p class="text-gray-600">Power the next generation of assistive tech. Automatically generate descriptive alt-text for images, making the visual web accessible to visually impaired users.</p></div></div></div>
-            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200"><h4 class="text-2xl font-semibold mb-6 text-center">The Developer Ecosystem</h4><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50"><tr><th class="p-4 font-semibold">Tool / Library</th><th class="p-4 font-semibold">Primary Use Case</th><th class="p-4 font-semibold">Best For...</th></tr></thead><tbody class="divide-y"><tr class="hover:bg-gray-50"><td class="p-4 font-mono font-medium">openai/CLIP</td><td class="p-4">Research & Reproduction</td><td class="p-4 text-gray-600">Understanding the core implementation and reproducing paper results.</td></tr><tr class="hover:bg-gray-50"><td class="p-4 font-mono font-medium">huggingface/transformers</td><td class="p-4">Rapid Prototyping</td><td class="p-4 text-gray-600">Quickly adding CLIP to an existing Python app with minimal code.</td></tr><tr class="hover:bg-gray-50"><td class="p-4 font-mono font-medium">clip.cpp</td><td class="p-4">Edge & Local Deployment</td><td class="p-4 text-gray-600">Running inference efficiently on resource-constrained devices (mobile, RPi).</td></tr><tr class="hover:bg-gray-50"><td class="p-4 font-mono font-medium">clip-as-service</td><td class="p-4">Scalable Microservice</td><td class="p-4 text-gray-600">Deploying a production-grade, high-throughput embedding service.</td></tr><tr class="hover:bg-gray-50"><td class="p-4 font-mono font-medium">clip-retrieval</td><td class="p-4">Building Search Systems</td><td class="p-4 text-gray-600">An end-to-end pipeline for building full-stack semantic search.</td></tr></tbody></table></div></div>
+            <div class="text-center mb-12">
+                <span class="text-blue-400 font-semibold">The CLIP Ripple Effect</span>
+                <h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">Powering the Multimodal Ecosystem</h3>
+                <p class="text-lg text-gray-400 max-w-3xl mx-auto mt-4">CLIP wasn't just a single model; it became a foundational technology. Its ability to create a shared 'concept space' was integrated as a core component in a vast range of more complex and famous AI systems.</p>
+            </div>
+            <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg border border-gray-700 mb-12">
+                <h4 class="text-2xl font-semibold mb-6 text-center text-white">Where CLIP Became a Foundational Layer</h4>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🎨</span><h5 class="font-semibold text-lg text-white">Guiding Text-to-Image Generation</h5></div>
+                        <p class="text-gray-400">This is its most famous use case. While CLIP doesn't generate images, it acts as the crucial **quality checker and steering wheel** for models like <b class="font-medium text-white">DALL-E 2</b> and <b class="font-medium text-white">Stable Diffusion</b>. It ensures the final image is semantically faithful to the text prompt.</p>
+                    </div>
+                    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🔍</span><h5 class="font-semibold text-lg text-white">Semantic Search & Retrieval</h5></div>
+                        <p class="text-gray-400">CLIP powers a new generation of search that understands meaning, not just keywords. Users can search with descriptive phrases ("a cozy sweater for winter") or even use an image to find visually similar items in a catalog.</p>
+                    </div>
+                    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🛡️</span><h5 class="font-semibold text-lg text-white">Zero-Shot Content Moderation</h5></div>
+                        <p class="text-gray-400">Platforms can filter content by simply providing text descriptions of what to look for (e.g., "hateful symbols," "graphic content"). CLIP can then flag images that match these concepts without needing a specially trained model for each rule.</p>
+                    </div>
+                    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🤖</span><h5 class="font-semibold text-lg text-white">Robotics & Embodied AI</h5></div>
+                        <p class="text-gray-400">Models like <b class="font-medium text-white">CLIPort</b> allow robots to understand high-level, abstract commands. By connecting language ("pick up the blue cup") to its camera feed, CLIP helps the robot identify the correct object and execute the task.</p>
+                    </div>
+                     <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🎬</span><h5 class="font-semibold text-lg text-white">Video Analysis</h5></div>
+                         <p class="text-gray-400">By processing video as a sequence of frames, CLIP can be used to search for specific scenes or actions within a vast video archive, such as finding every clip that contains a "construction site" or a "sunset over the ocean."</p>
+                    </div>
+                    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
+                        <div class="flex items-center mb-3"><span class="text-3xl mr-4">🌐</span><h5 class="font-semibold text-lg text-white">Accessibility Tools</h5></div>
+                        <p class="text-gray-400">The principles behind CLIP are core to modern image captioning systems that generate descriptive alt-text for images, making the visual web more accessible to visually impaired users.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg border border-gray-700"><h4 class="text-2xl font-semibold mb-6 text-center text-white">The Developer Ecosystem</h4><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-900"><tr><th class="p-4 font-semibold text-white">Tool / Library</th><th class="p-4 font-semibold text-white">Primary Use Case</th><th class="p-4 font-semibold text-white">Best For...</th></tr></thead><tbody class="divide-y divide-gray-700"><tr class="hover:bg-gray-700"><td class="p-4 font-mono font-medium text-gray-200">openai/CLIP</td><td class="p-4 text-gray-300">Research & Reproduction</td><td class="p-4 text-gray-400">Understanding the core implementation and reproducing paper results.</td></tr><tr class="hover:bg-gray-700"><td class="p-4 font-mono font-medium text-gray-200">huggingface/transformers</td><td class="p-4 text-gray-300">Rapid Prototyping</td><td class="p-4 text-gray-400">Quickly adding CLIP capabilities to an existing Python app with minimal code.</td></tr><tr class="hover:bg-gray-700"><td class="p-4 font-mono font-medium text-gray-200">clip.cpp</td><td class="p-4 text-gray-300">Edge & Local Deployment</td><td class="p-4 text-gray-400">Running inference efficiently on resource-constrained devices (mobile, RPi).</td></tr><tr class="hover:bg-gray-700"><td class="p-4 font-mono font-medium text-gray-200">clip-as-service</td><td class="p-4 text-gray-300">Scalable Microservice</td><td class="p-4 text-gray-400">Deploying a production-grade, high-throughput embedding service.</td></tr><tr class="hover:bg-gray-700"><td class="p-4 font-mono font-medium text-gray-200">clip-retrieval</td><td class="p-4 text-gray-300">Building Search Systems</td><td class="p-4 text-gray-400">An end-to-end pipeline for building full-stack semantic search.</td></tr></tbody></table></div></div>
         </section>
 
         <!-- Section 5: Reality Check -->
         <section id="reality" class="mb-16 scroll-mt-20">
-            <div class="text-center mb-12"><span class="text-blue-600 font-semibold">Critical Perspectives</span><h3 class="text-3xl md:text-4xl font-bold mt-2">Limitations, Biases, and the Path Forward</h3><p class="text-lg text-gray-600 max-w-3xl mx-auto mt-4">No technology is a silver bullet. A responsible engineer must understand where these models fail and the societal biases they inherit. Recognizing these flaws is the first step toward building better, fairer systems.</p></div>
+            <div class="text-center mb-12"><span class="text-blue-400 font-semibold">Critical Perspectives</span><h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">Limitations, Biases, and the Path Forward</h3><p class="text-lg text-gray-400 max-w-3xl mx-auto mt-4">No technology is a silver bullet. A responsible engineer must understand where these models fail and the societal biases they inherit. Recognizing these flaws is the first step toward building better, fairer systems.</p></div>
             <div class="grid md:grid-cols-2 gap-8 items-start">
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200"><h4 class="text-xl font-semibold mb-4">Functional Limitations: Where CLIP Fails</h4><ul class="space-y-3 list-disc list-inside text-gray-600"><li><span class="font-semibold">Abstract Tasks:</span> Poor at counting objects or judging spatial relationships. Performance is often near random chance.</li><li><span class="font-semibold">Fine-Grained Classification:</span> Struggles to differentiate between car models, flower species, or dog breeds where nuance is key.</li><li><span class="font-semibold">Compositional Understanding:</span> Confused by scenes with multiple objects and their relationships, often focusing only on the largest or first-mentioned object.</li><li><span class="font-semibold">Out-of-Distribution Data:</span> Performance drops significantly on data unlike its web-scraped training set, like handwritten digits (88% accuracy on MNIST).</li></ul></div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200"><h4 class="text-xl font-semibold mb-4">The Critical Issue: The Accessibility Gap</h4><p class="text-gray-600 mb-4">A model's utility is tied to its training data. CLIP systematically underperforms on data from underrepresented groups, undermining its potential for good. This chart shows the stark accuracy drop on images from blind and low-vision (BLV) users.</p><div class="chart-container"><canvas id="biasChart"></canvas></div></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700"><h4 class="text-xl font-semibold mb-4 text-white">Functional Limitations: Where CLIP Fails</h4><ul class="space-y-3 list-disc list-inside text-gray-400"><li><span class="font-semibold text-gray-200">Abstract Tasks:</span> Poor at counting objects or judging spatial relationships. Performance is often near random chance.</li><li><span class="font-semibold text-gray-200">Fine-Grained Classification:</span> Struggles to differentiate between car models, flower species, or dog breeds where nuance is key.</li><li><span class="font-semibold text-gray-200">Compositional Understanding:</span> Confused by scenes with multiple objects and their relationships, often focusing only on the largest or first-mentioned object.</li><li><span class="font-semibold text-gray-200">Out-of-Distribution Data:</span> Performance drops significantly on data unlike its web-scraped training set, like handwritten digits (88% accuracy on MNIST).</li></ul></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700"><h4 class="text-xl font-semibold mb-4 text-white">The Critical Issue: The Accessibility Gap</h4><p class="text-gray-400 mb-4">A model's utility is tied to its training data. CLIP systematically underperforms on data from underrepresented groups, undermining its potential for good. This chart shows the stark accuracy drop on images from blind and low-vision (BLV) users.</p><div class="chart-container"><canvas id="biasChart"></canvas></div></div>
             </div>
-            <div class="mt-12 text-center bg-gray-100 p-8 rounded-xl"><h4 class="text-2xl font-bold">The Path Forward: From Representation to Reasoning</h4><p class="text-lg text-gray-700 max-w-3xl mx-auto mt-4">CLIP learned to create good <span class="font-semibold text-blue-600">representations</span>. Frozen models enabled basic <span class="font-semibold text-blue-600">reasoning</span>. The future, with models like GPT-4o and Gemini, is about natively integrated, multimodal <span class="font-semibold text-blue-600">understanding</span>. The principles pioneered by CLIP are the essential foundation for this next generation of AI.</p></div>
+            <div class="mt-12 text-center bg-gray-800 p-8 rounded-xl border border-gray-700"><h4 class="text-2xl font-bold text-white">The Path Forward: From Representation to Reasoning</h4><p class="text-lg text-gray-300 max-w-3xl mx-auto mt-4">CLIP learned to create good <span class="font-semibold text-blue-400">representations</span>. Frozen models enabled basic <span class="font-semibold text-blue-400">reasoning</span>. The future, with models like GPT-4o and Gemini, is about natively integrated, multimodal <span class="font-semibold text-blue-400">understanding</span>. The principles pioneered by CLIP are the essential foundation for this next generation of AI.</p></div>
         </section>
     </main>
 
-    <footer class="bg-gray-800 text-white text-center py-6">
+    <footer class="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800">
         <p>Interactive Experience created for a technical presentation.</p>
     </footer>
 
     <!-- Details Modal -->
     <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50 fade-in">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-2xl font-bold text-gray-800">CLIP's Mechanism: A Deep Dive</h3>
-                <button id="close-modal-btn" class="text-gray-500 hover:text-red-600 text-3xl font-bold">&times;</button>
-            </div>
+        <div class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700 text-gray-300">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700"><h3 class="text-2xl font-bold text-white">CLIP's Mechanism: A Deep Dive</h3><button id="close-modal-btn" class="text-gray-400 hover:text-red-500 text-3xl font-bold">&times;</button></div>
             <div class="p-6 md:p-8 space-y-6 overflow-y-auto modal-body">
-                <div class="prose max-w-none">
-                    <h4 class="font-semibold text-lg">Step 1: Prepare the Data Batch</h4>
-                    <p>Training starts with a large batch of $N$ (image, text) pairs, where $N=32,768$ in the original paper. Let this batch be $B = \{(I_1, T_1), (I_2, T_2), \dots, (I_N, T_N)\}$.</p>
-
-                    <h4 class="font-semibold text-lg mt-4">Step 2: Encode Images and Text</h4>
-                    <p>The image and text encoders process their respective inputs to generate embeddings (vectors).</p>
-                    <ul class="list-disc list-inside">
-                        <li><b>Image Encoder ($f_{img}$):</b> An image $I_i$ is fed through a Vision Transformer, producing an image embedding $\mathbf{i}_i = f_{img}(I_i)$.</li>
-                        <li><b>Text Encoder ($f_{txt}$):</b> A text caption $T_i$ is fed through a Transformer, producing a text embedding $\mathbf{t}_i = f_{txt}(T_i)$.</li>
-                    </ul>
-                    <p>We now have two sets of vectors: $\{\mathbf{i}_1, \dots, \mathbf{i}_N\}$ and $\{\mathbf{t}_1, \dots, \mathbf{t}_N\}$.</p>
-                    
-                    <h4 class="font-semibold text-lg mt-4">Step 3: Calculate the Similarity Matrix</h4>
-                    <p>We compute an $N \times N$ matrix of cosine similarities between every image embedding and every text embedding. The goal is to maximize the scores on the diagonal (correct pairs) and minimize all other scores.</p>
-                    $$ W_{i,j} = \frac{\mathbf{i}_i \cdot \mathbf{t}_j}{\|\mathbf{i}_i\| \|\mathbf{t}_j\|} $$
-                    
-                    <h4 class="font-semibold text-lg mt-4">Step 4: The Symmetric Loss Function</h4>
-                    <p>The model learns using a symmetric cross-entropy loss. We calculate the loss for predicting text from images and vice-versa, then average them. The similarity scores (logits) are scaled by a learned temperature parameter $\tau$.</p>
-                    <p><b>Loss for a single image $i$:</b></p>
-                    $$ \mathcal{L}_{\text{image}_i} = -\log\left(\frac{\exp(W_{i,i} / \tau)}{\sum_{k=1}^{N} \exp(W_{i,k} / \tau)}\right) $$
-                    <p><b>Loss for a single text $j$:</b></p>
-                    $$ \mathcal{L}_{\text{text}_j} = -\log\left(\frac{\exp(W_{j,j} / \tau)}{\sum_{k=1}^{N} \exp(W_{k,j} / \tau)}\right) $$
-                    <p><b>Total Loss for the batch:</b></p>
-                    $$ \mathcal{L}_{\text{total}} = \frac{1}{2N} \sum_{i=1}^{N} (\mathcal{L}_{\text{image}_i} + \mathcal{L}_{\text{text}_i}) $$
-                    
-                    <h4 class="font-semibold text-lg mt-4">Step 5: Zero-Shot Inference Pseudo-code</h4>
-                    <p>After training, the encoders can classify images into new categories without fine-tuning.</p>
-                    <pre class="bg-gray-100 p-4 rounded-lg mt-2 overflow-x-auto"><code class="language-python">
+                <div class="prose prose-invert max-w-none">
+                    <h4 class="font-semibold text-lg text-white">Step 1: Prepare the Data Batch</h4><p>Training starts with a large batch of $N$ (image, text) pairs, where $N=32,768$ in the original paper. Let this batch be $B = \{(I_1, T_1), (I_2, T_2), \dots, (I_N, T_N)\}$.</p>
+                    <h4 class="font-semibold text-lg mt-4 text-white">Step 2: Encode Images and Text</h4><p>The image and text encoders process their respective inputs to generate embeddings (vectors).</p><ul class="list-disc list-inside"><li><b>Image Encoder ($f_{img}$):</b> An image $I_i$ is fed through a Vision Transformer, producing an image embedding $\mathbf{i}_i = f_{img}(I_i)$.</li><li><b>Text Encoder ($f_{txt}$):</b> A text caption $T_i$ is fed through a Transformer, producing a text embedding $\mathbf{t}_i = f_{txt}(T_i)$.</li></ul><p>We now have two sets of vectors: $\{\mathbf{i}_1, \dots, \mathbf{i}_N\}$ and $\{\mathbf{t}_1, \dots, \mathbf{t}_N\}$.</p>
+                    <h4 class="font-semibold text-lg mt-4 text-white">Step 3: Calculate the Similarity Matrix</h4><p>We compute an $N \times N$ matrix of cosine similarities between every image embedding and every text embedding. The goal is to maximize the scores on the diagonal (correct pairs) and minimize all other scores.</p>$$ W_{i,j} = \frac{\mathbf{i}_i \cdot \mathbf{t}_j}{\|\mathbf{i}_i\| \|\mathbf{t}_j\|} $$
+                    <h4 class="font-semibold text-lg mt-4 text-white">Step 4: The Symmetric Loss Function</h4><p>The model learns using a symmetric cross-entropy loss. We calculate the loss for predicting text from images and vice-versa, then average them. The similarity scores (logits) are scaled by a learned temperature parameter $\tau$.</p><p><b>Loss for a single image $i$:</b></p>$$ \mathcal{L}_{\text{image}_i} = -\log\left(\frac{\exp(W_{i,i} / \tau)}{\sum_{k=1}^{N} \exp(W_{i,k} / \tau)}\right) $$<p><b>Loss for a single text $j$:</b></p>$$ \mathcal{L}_{\text{text}_j} = -\log\left(\frac{\exp(W_{j,j} / \tau)}{\sum_{k=1}^{N} \exp(W_{k,j} / \tau)}\right) $$<p><b>Total Loss for the batch:</b></p>$$ \mathcal{L}_{\text{total}} = \frac{1}{2N} \sum_{i=1}^{N} (\mathcal{L}_{\text{image}_i} + \mathcal{L}_{\text{text}_i}) $$
+                    <h4 class="font-semibold text-lg mt-4 text-white">Step 5: Zero-Shot Inference Pseudo-code</h4><p>After training, the encoders can classify images into new categories without fine-tuning.</p>
+                    <pre class="bg-gray-900 p-4 rounded-lg mt-2 overflow-x-auto"><code class="language-python text-gray-300">
 # Encoders are pre-trained
 image_encoder = load_trained_image_encoder()
 text_encoder = load_trained_text_encoder()
@@ -310,7 +323,6 @@ def classify_image(image_path, class_labels):
             </div>
         </div>
     </div>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -342,7 +354,7 @@ def classify_image(image_path, class_labels):
             document.querySelectorAll('.diagram-box').forEach(box => {
                 box.addEventListener('click', (e) => {
                     const id = e.currentTarget.id;
-                    diagramExplanation.innerHTML = `<p class="text-gray-700">${explanations[id]}</p>`;
+                    diagramExplanation.innerHTML = `<p class="text-gray-300">${explanations[id]}</p>`;
                     diagramExplanation.classList.remove('fade-in'); void diagramExplanation.offsetWidth; diagramExplanation.classList.add('fade-in');
                 });
             });
@@ -363,8 +375,8 @@ def classify_image(image_path, class_labels):
                 probs.forEach((prob, index) => {
                     const isMax = prob === Math.max(...probs);
                     const resultEl = document.createElement('div');
-                    resultEl.className = `p-3 rounded-lg flex justify-between items-center transition-all duration-300 ${isMax ? 'bg-green-100 border-2 border-green-400' : 'bg-gray-100'}`;
-                    resultEl.innerHTML = `<span class="font-medium ${isMax ? 'text-green-800' : 'text-gray-700'}">${promptValues[index]}</span><span class="font-bold ${isMax ? 'text-green-800' : 'text-gray-800'}">${(prob * 100).toFixed(1)}%</span>`;
+                    resultEl.className = `p-3 rounded-lg flex justify-between items-center transition-all duration-300 ${isMax ? 'bg-green-800/50 border-2 border-green-500' : 'bg-gray-700'}`;
+                    resultEl.innerHTML = `<span class="font-medium ${isMax ? 'text-green-200' : 'text-gray-300'}">${promptValues[index]}</span><span class="font-bold ${isMax ? 'text-green-200' : 'text-gray-200'}">${(prob * 100).toFixed(1)}%</span>`;
                     resultsDiv.appendChild(resultEl);
                 });
                 resultsDiv.classList.remove('fade-in'); void resultsDiv.offsetWidth; resultsDiv.classList.add('fade-in');
@@ -372,7 +384,53 @@ def classify_image(image_path, class_labels):
             
             // Bias Chart
             const ctx = document.getElementById('biasChart').getContext('2d');
-            new Chart(ctx, { type: 'bar', data: { labels: ['Standard Web Images', 'Images from BLV Users'], datasets: [{ label: 'Classification Accuracy', data: [90, 75], backgroundColor: ['rgba(59, 130, 246, 0.6)', 'rgba(239, 68, 68, 0.6)'], borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)'], borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%' } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return `Accuracy: ${context.raw}%`; } } }, title: { display: true, text: 'Accuracy Drop on Underrepresented Data', font: { size: 16 } } } } });
+            new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: ['Standard Web Images', 'Images from BLV Users'], 
+                    datasets: [{ 
+                        label: 'Classification Accuracy', 
+                        data: [90, 75], 
+                        backgroundColor: ['rgba(59, 130, 246, 0.6)', 'rgba(239, 68, 68, 0.6)'], 
+                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)'], 
+                        borderWidth: 2 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { 
+                                color: '#D1D5DB',
+                                callback: function(value) { return value + '%' } 
+                            } 
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#D1D5DB' }
+                        }
+                    }, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            backgroundColor: '#1F2937',
+                            titleColor: '#E5E7EB',
+                            bodyColor: '#D1D5DB',
+                            callbacks: { label: function(context) { return `Accuracy: ${context.raw}%`; } } 
+                        }, 
+                        title: { 
+                            display: true, 
+                            text: 'Accuracy Drop on Underrepresented Data',
+                            color: '#F9FAFB',
+                            font: { size: 16 } 
+                        } 
+                    } 
+                } 
+            });
 
             // Modal Logic
             const showDetailsBtn = document.getElementById('show-details-btn');
