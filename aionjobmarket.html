@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Analysis: Desire & Capability in the New Machine Age</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Dark Harmony -->
+    <!-- Application Structure Plan: A thematic, single-page dashboard designed for non-linear exploration. The structure starts with a Hero section for context, followed by a sticky navigation bar (The Framework, Key Findings, Case Study: SWE, Future Skills, Strategic Insights) for easy access to different themes. The 'Framework' section interactively explains the core models (HAS and Desire-Capability Landscape) using clickable cards and a hover-able grid. 'Key Findings' uses prominent Chart.js visualizations to highlight the 'Great Mismatch'. The 'Case Study: SWE' section provides a concrete example of this disruption in the software engineering field. 'Future Skills' uses a clean, two-column layout to compare shifting skill values. 'Strategic Insights' uses a tabbed interface to neatly segment recommendations. This structure was chosen to transform a dense report into an engaging, user-driven experience, allowing users to explore what interests them most rather than following a rigid, linear path. -->
+    <!-- Visualization & Content Choices: 
+        - The Framework (HAS): Report Info -> 5 levels of Human Agency Scale. Goal -> Inform/Organize. Viz/Method -> HTML/CSS/JS interactive cards. Interaction -> Click to reveal details. Justification -> More engaging than a static table.
+        - The Framework (Landscape): Report Info -> 4 zones of Desire-Capability. Goal -> Inform/Organize. Viz/Method -> HTML Grid + JS hover effects. Interaction -> Hover to see zone details. Justification -> Turns a static 2x2 matrix into an explorable diagram.
+        - The Mismatch (VC Investment): Report Info -> 41% of YC funding in "Red Light"/"Low Priority" zones. Goal -> Compare/Inform. Viz/Method -> Chart.js Donut Chart. Interaction -> Hover for tooltips. Justification -> Clearly visualizes part-to-whole relationship of investment.
+        - Worker Attitudes: Report Info -> Reasons for/against automation. Goal -> Compare. Viz/Method -> Chart.js Horizontal Bar Charts. Interaction -> Hover for tooltips. Justification -> Effective side-by-side comparison of motivating factors.
+        - Preferred Collaboration: Report Info -> Inverted-U preference for HAS levels peaking at H3. Goal -> Show Distribution. Viz/Method -> Chart.js Bar Chart. Interaction -> Hover for tooltips. Justification -> Clearly illustrates the preference for partnership.
+        - Case Study (SWE): Report Info -> Software engineer job market disruption. Goal -> Exemplify. Viz/Method -> Stat cards, blockquotes, two-column layouts. Interaction -> Static display. Justification -> Provides a tangible, real-world case study of the report's abstract concepts.
+        - Future Skills: Report Info -> Shift from analytical to interpersonal skills. Goal -> Compare/Inform. Viz/Method -> Two-column HTML/CSS layout. Interaction -> Static display. Justification -> Simple, clear visual separation of concepts.
+        - Strategic Insights: Report Info -> Recommendations for stakeholders. Goal -> Organize. Viz/Method -> HTML/CSS/JS Tabs. Interaction -> Click to switch content. Justification -> Organizes dense text for specific audiences, preventing information overload.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #D1D5DB; /* text-gray-300 */
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #FBBF24; /* amber-400 */
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .zone-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .zone-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .has-card.active {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            border-color: #FBBF24; /* amber-400 */
+        }
+        .tab.active {
+            border-color: #FBBF24; /* amber-400 */
+            color: #FBBF24;
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+        blockquote {
+            border-left: 4px solid #FBBF24; /* amber-400 */
+            padding-left: 1rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="navbar" class="bg-gray-900/80 backdrop-blur-lg sticky top-0 z-50 shadow-md shadow-black/20">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-white">
+                AI & The Workforce
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#framework" class="nav-link text-gray-300 hover:text-amber-400">The Framework</a>
+                <a href="#findings" class="nav-link text-gray-300 hover:text-amber-400">Key Findings</a>
+                <a href="#swe-case-study" class="nav-link text-gray-300 hover:text-amber-400">Case Study: SWE</a>
+                <a href="#skills" class="nav-link text-gray-300 hover:text-amber-400">Future Skills</a>
+                <a href="#strategy" class="nav-link text-gray-300 hover:text-amber-400">Strategic Insights</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="py-20 md:py-28 bg-gray-800">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">Desire & Capability</h1>
+                <p class="text-lg md:text-xl text-gray-300 mt-4">An Interactive Exploration of the Shao et al. Framework for the Future of Work</p>
+                <p class="mt-8 max-w-3xl mx-auto text-gray-400">
+                    The rapid rise of AI agents is reshaping the labor market. But is the technology being built aligned with what the human workforce actually wants and needs? This application explores the findings of a 2025 research paper that introduces a novel, worker-centric framework to audit the future of work, revealing a critical disconnect between technological investment and human preference.
+                </p>
+            </div>
+        </section>
+
+        <section id="framework" class="py-20 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">The Core Framework</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-gray-300">The research introduces two key concepts to systematically map the impact of AI: the Human Agency Scale (HAS) to quantify worker preference, and the Desire-Capability Landscape to classify tasks for strategic action.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-white mb-4">The Human Agency Scale (HAS)</h3>
+                        <p class="text-gray-300 mb-6">The HAS moves beyond a simple "automate or not" question, providing a five-level language to describe the desired level of human involvement. Click on a level to learn more.</p>
+                        <div id="has-container" class="space-y-3"></div>
+                    </div>
+                    <div id="has-details" class="bg-gray-800 p-6 rounded-lg shadow-2xl shadow-black/20 min-h-[200px] flex flex-col justify-center">
+                        <h4 id="has-detail-title" class="text-xl font-bold text-amber-400"></h4>
+                        <p id="has-detail-description" class="mt-2 text-gray-300"></p>
+                    </div>
+                </div>
+
+                <div class="mt-24">
+                    <h3 class="text-2xl font-bold text-white mb-4 text-center">The Desire-Capability Landscape</h3>
+                    <p class="text-gray-300 mb-8 text-center max-w-3xl mx-auto">By plotting worker desire against AI capability, all work tasks can be categorized into four strategic zones. Hover over a zone to see its definition and significance.</p>
+                    <div class="relative max-w-4xl mx-auto">
+                         <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-full h-px bg-gray-700"></div>
+                            <div class="h-full w-px bg-gray-700"></div>
+                        </div>
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 -mt-6 text-sm font-semibold text-gray-400">High AI Capability</div>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 -mb-6 text-sm font-semibold text-gray-400">Low AI Capability</div>
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 -ml-6 text-sm font-semibold text-gray-400 transform -rotate-90">High Worker Desire</div>
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 -mr-6 text-sm font-semibold text-gray-400 transform rotate-90">Low Worker Desire</div>
+                        <div id="landscape-grid" class="grid grid-cols-2 grid-rows-2 gap-4 relative"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="findings" class="py-20 md:py-24 bg-gray-800">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Key Findings: A Tale of Mismatches & Motivations</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-gray-300">The data reveals a stark disconnect between investment trends and workforce needs, while also providing deep insight into the psychology driving worker attitudes toward AI.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="text-center lg:text-left">
+                        <h3 class="text-2xl font-bold text-white mb-4">The "Great Mismatch" in VC Investment</h3>
+                        <p class="text-gray-300 mb-6">Analysis of the Y Combinator portfolio, a proxy for tech investment, shows that a huge portion of funding targets areas where workers are most resistant to automation. This suggests many AI products face a hidden, uphill battle for adoption.</p>
+                        <div class="text-3xl font-bold text-rose-500">41%</div>
+                        <p class="text-gray-400 font-semibold">of YC company-task mappings fall into the "Red Light" or "Low Priority" zones.</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mismatchChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="mt-20">
+                    <h3 class="text-2xl font-bold text-white mb-8 text-center">The Collaborative Imperative: Why Workers Resist or Welcome AI</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-center mb-4 text-emerald-400">Top Reasons to Automate</h4>
+                            <div class="chart-container h-64 md:h-80">
+                                <canvas id="proAutomationChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-center mb-4 text-rose-400">Top Reasons to Resist Automation</h4>
+                            <div class="chart-container h-64 md:h-80">
+                                <canvas id="antiAutomationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="mt-20 text-center">
+                    <h3 class="text-2xl font-bold text-white mb-4">The Ideal Relationship: Partnership Over Autonomy</h3>
+                    <p class="text-gray-300 mb-8 max-w-2xl mx-auto">When asked about their preferred level of interaction, workers overwhelmingly favor a collaborative partnership with AI (H3) over full automation (H1) or full manual control (H5). They want a "copilot," not a replacement.</p>
+                    <div class="chart-container">
+                        <canvas id="hasPreferenceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="swe-case-study" class="py-20 md:py-24">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Case Study: The Software Engineer's Dilemma</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-300">Once considered one of the most secure and in-demand professions, software engineering is now on the front lines of AI-driven disruption. The field serves as a powerful, real-time case study of the forces described in this report, from shifting skill values to a growing mismatch between technology and professional identity.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-center max-w-6xl mx-auto">
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="text-4xl font-bold text-amber-400">7th</div>
+                        <p class="mt-2 text-gray-400">Rank of Computer Science among college majors with the highest unemployment rates in early 2025.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="text-4xl font-bold text-amber-400">$10B+</div>
+                        <p class="mt-2 text-gray-400">Venture capital invested in "AI-native" software development tools in the last 18 months.</p>
+                    </div>
+                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg md:col-span-2 lg:col-span-1">
+                        <div class="text-4xl font-bold text-amber-400">90%</div>
+                        <p class="mt-2 text-gray-400">Of professional developers report using AI coding assistants in their daily workflow.</p>
+                    </div>
+                </div>
+
+                <div class="mt-20 max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-bold text-white mb-4 text-center">From Copilot to Autopilot</h3>
+                    <p class="text-gray-300 mb-8 text-center">The industry is rapidly moving beyond simple AI "copilots" that suggest code snippets to autonomous "agents" capable of managing entire development cycles. This represents a fundamental shift in the human-AI relationship within software engineering.</p>
+
+                    <blockquote class="text-gray-300 my-8">
+                        "The era of the programmer as a mere 'coder' is over. The prompt is the new source code. The new job is to be the architect, the prompter, the teacher, and the orchestrator of AI systems."
+                        <cite class="block text-right mt-2 not-italic text-sm text-gray-500">&mdash; Andrej Karpathy, Y Combinator AI Startup School in June 2025</cite>
+                    </blockquote>
+                    
+                    <p class="text-gray-400">
+                        This shift directly challenges the professional identity of many engineers. While few enjoy writing boilerplate code (a "Green Light" task), many derive immense satisfaction and a sense of craftsmanship from complex problem-solving and system architecture. As AI agents become more capable, they begin to encroach on these core, high-value tasks, moving them into the contentious "Red Light" zone where AI is capable but human desire to retain control is high. This creates a new "great mismatch" within the very industry that is building this technology.
+                    </p>
+                </div>
+
+                 <div class="mt-20 max-w-5xl mx-auto">
+                     <h3 class="text-2xl font-bold text-white mb-8 text-center">The New Skill Premium for Engineers</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-rose-900/50 border border-rose-500/50 rounded-lg p-6">
+                            <h4 class="text-xl font-bold text-rose-300 mb-4">Value is Diminishing (Commoditized by AI)</h4>
+                            <ul class="space-y-3 text-gray-300">
+                                <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Writing boilerplate code</li>
+                                <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Standard algorithm implementation</li>
+                                <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Unit test generation</li>
+                                <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Simple debugging</li>
+                            </ul>
+                        </div>
+                        <div class="bg-emerald-900/50 border border-emerald-500/50 rounded-lg p-6">
+                            <h4 class="text-xl font-bold text-emerald-300 mb-4">Value is Ascending (Human-Centric & Strategic)</h4>
+                            <ul class="space-y-3 text-gray-300">
+                                <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Complex system architecture & design</li>
+                                <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Product vision & user empathy</li>
+                                <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Cross-functional team leadership</li>
+                                <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Orchestrating and fine-tuning multiple AI agents</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="py-20 md:py-24 bg-gray-800">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">The Emerging Skill Premium</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-300">As AI masters routine information processing, the economic value of human skills is shifting. The data suggests a decline in the premium for analytical tasks and a rise in the importance of uniquely human interpersonal and organizational competencies.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="bg-rose-900/50 border border-rose-500/50 rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-rose-300 mb-4">Value is Diminishing</h3>
+                        <p class="text-rose-400 mb-4">These skills are increasingly automatable and are less prominent in tasks requiring high human agency.</p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Analyzing data or information</li>
+                            <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Processing information</li>
+                            <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Updating and using relevant knowledge</li>
+                            <li class="flex items-start"><span class="mr-3 text-rose-500">&#10007;</span>Documenting/recording information</li>
+                        </ul>
+                    </div>
+                     <div class="bg-emerald-900/50 border border-emerald-500/50 rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-emerald-300 mb-4">Value is Ascending</h3>
+                        <p class="text-emerald-400 mb-4">These interpersonal and organizational skills are frequently associated with tasks where human agency is essential.</p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Guiding, directing, and motivating subordinates</li>
+                            <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Coordinating the work and activities of others</li>
+                            <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Developing and building teams</li>
+                            <li class="flex items-start"><span class="mr-3 text-emerald-400">&#10003;</span>Establishing and maintaining interpersonal relationships</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="strategy" class="py-20 md:py-24">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Strategic Insights & Recommendations</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-gray-300">The study's findings provide a clear roadmap for key stakeholders. Select a group below to see tailored guidance for navigating the AI-driven future of work.</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6 flex flex-wrap justify-center border-b border-gray-700">
+                        <button class="tab py-3 px-6 font-semibold text-gray-400 border-b-2 border-transparent transition" data-tab="technologists">For Technologists & Investors</button>
+                        <button class="tab py-3 px-6 font-semibold text-gray-400 border-b-2 border-transparent transition" data-tab="policymakers">For Policymakers & Educators</button>
+                        <button class="tab py-3 px-6 font-semibold text-gray-400 border-b-2 border-transparent transition" data-tab="researchers">For Researchers</button>
+                    </div>
+
+                    <div id="tab-content" class="bg-gray-800 p-8 rounded-lg shadow-inner">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-gray-300">This interactive analysis is based on the 2025 preprint research paper by Yijia Shao et al., "Future of Work with AI Agents: Auditing Automation and Augmentation Potential across the U.S. Workforce."</p>
+            <p class="text-sm text-gray-500 mt-2">Application created for illustrative and educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            Chart.defaults.color = 'rgba(209, 213, 219, 0.8)';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)';
+
+            const hasData = [
+                { id: 'H1', title: 'H1: Full AI Control', description: 'The AI agent handles the task entirely on its own, with no human involvement necessary.' },
+                { id: 'H2', title: 'H2: AI-Led Collaboration', description: 'The AI agent performs the task but requires minimal human input for optimal performance.' },
+                { id: 'H3', title: 'H3: Equal Partnership', description: 'The AI agent and the human work as equal partners, achieving outcomes superior to what either could accomplish alone.' },
+                { id: 'H4', title: 'H4: Human-Led Collaboration', description: 'The AI agent serves as a tool or assistant, requiring significant human input and guidance.' },
+                { id: 'H5', title: 'H5: Full Human Control', description: 'The task is such that an AI agent cannot function without continuous human involvement; human agency is essential.' },
+            ];
+
+            const landscapeData = [
+                { zone: 'Automation "Red Light" Zone', description: 'High risk of worker resistance. Deployment requires overcoming social friction.', color: 'bg-rose-900/50 border border-rose-500/50', textColor: 'text-rose-200' },
+                { zone: 'Automation "Green Light" Zone', description: 'Prime candidates for AI deployment. High potential for productivity and worker satisfaction.', color: 'bg-emerald-900/50 border border-emerald-500/50', textColor: 'text-emerald-200' },
+                { zone: 'Low Priority Zone', description: 'Low priority for R&D and deployment. Neither desired for automation nor currently feasible.', color: 'bg-gray-700/50 border border-gray-500/50', textColor: 'text-gray-200' },
+                { zone: 'R&D Opportunity Zone', description: 'High-value targets for future AI R&D. Represents unmet needs in the workforce.', color: 'bg-amber-900/50 border border-amber-500/50', textColor: 'text-amber-200' },
+            ];
+
+            const tabData = {
+                technologists: {
+                    title: 'For Technologists & Investors',
+                    content: `
+                        <ul class="space-y-4 text-gray-300">
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Prioritize Collaborative Intelligence:</strong> Design "copilots," not autonomous replacements. Focus on features that enhance user control, transparency, and trust.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Re-evaluate Risk in the "Red Light" Zone:</strong> This zone represents high socio-technical debt. Success requires more than good tech; it requires a strategy to change behavior and build trust.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Target the "R&D Opportunity" Pipeline:</strong> This zone highlights where to direct long-term investment to solve complex problems with a significant technical moat and high user demand.</div></li>
+                        </ul>
+                    `
+                },
+                policymakers: {
+                    title: 'For Policymakers & Educators',
+                    content: `
+                        <ul class="space-y-4 text-gray-300">
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Reorient Workforce Development:</strong> The "skills gap" is social and emotional. Pivot from a narrow focus on "hard" skills to cultivating interpersonal competencies like collaboration, leadership, and communication.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Drive Educational Reform:</strong> Move away from rote memorization and toward project-based, collaborative learning. AI literacy should be a foundational competency for all students.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Strengthen Social Safety Nets:</strong> The transition will create displacement. Proactively explore policies like wage insurance, lifelong learning accounts, and portable benefits.</div></li>
+                        </ul>
+                    `
+                },
+                researchers: {
+                    title: 'For Researchers',
+                    content: `
+                        <ul class="space-y-4 text-gray-300">
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Conduct Longitudinal Studies:</strong> Re-run the WORKBank audit periodically to create a dynamic forecast of the labor market, tracking how tasks migrate between zones over time.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Refine Measurement Instruments:</strong> Develop more robust, bias-resistant methods for measuring subjective concepts like "desire" and "agency," potentially incorporating implicit measures.</div></li>
+                            <li class="flex"><span class="font-bold text-amber-400 mr-3">&#9656;</span><div><strong class="font-semibold text-gray-100">Expand the Scope of Analysis:</strong> Deploy the framework in other cultural contexts and extend it to measure second-order effects like wage inequality, job quality, and worker well-being.</div></li>
+                        </ul>
+                    `
+                }
+            };
+
+            const hasContainer = document.getElementById('has-container');
+            const hasDetailTitle = document.getElementById('has-detail-title');
+            const hasDetailDescription = document.getElementById('has-detail-description');
+
+            hasData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'has-card p-4 border-2 border-gray-700 rounded-lg cursor-pointer transition';
+                card.textContent = item.title;
+                card.dataset.id = item.id;
+                hasContainer.appendChild(card);
+                
+                card.addEventListener('click', () => {
+                    updateHasDetails(item.id);
+                });
+            });
+
+            function updateHasDetails(id) {
+                const item = hasData.find(d => d.id === id);
+                if (item) {
+                    hasDetailTitle.textContent = item.title;
+                    hasDetailDescription.textContent = item.description;
+                    document.querySelectorAll('.has-card').forEach(c => c.classList.remove('active'));
+                    document.querySelector(`.has-card[data-id="${id}"]`).classList.add('active');
+                }
+            }
+            updateHasDetails('H3');
+
+            const landscapeGrid = document.getElementById('landscape-grid');
+            landscapeData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `zone-card h-40 md:h-48 flex flex-col justify-center items-center text-center p-4 rounded-lg ${item.color} ${item.textColor}`;
+                card.innerHTML = `<h5 class="font-bold">${item.zone}</h5><p class="text-sm mt-2 hidden md:block">${item.description}</p>`;
+                landscapeGrid.appendChild(card);
+            });
+            
+            new Chart(document.getElementById('mismatchChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['"Red Light" & "Low Priority" Zones', 'Other Zones'],
+                    datasets: [{
+                        data: [41, 59],
+                        backgroundColor: ['#F43F5E', '#10B981'],
+                        borderColor: '#1f2937',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: Chart.defaults.color } },
+                        title: { display: true, text: 'YC AI Company Investment Distribution', color: Chart.defaults.color }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('proAutomationChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Free up time', 'Improve Quality', 'Repetitive Task'],
+                    datasets: [{
+                        label: '% of Pro-Automation Responses',
+                        data: [69.4, 46.6, 46.6],
+                        backgroundColor: 'rgba(52, 211, 153, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, max: 80 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            new Chart(document.getElementById('antiAutomationChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Lack of Trust', 'Job Replacement Fear', 'Lacks Human Qualities'],
+                    datasets: [{
+                        label: '% of Anti-Automation Responses',
+                        data: [45.0, 23.0, 16.3],
+                        backgroundColor: 'rgba(244, 63, 94, 0.7)',
+                        borderColor: 'rgba(225, 29, 72, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, max: 50 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            new Chart(document.getElementById('hasPreferenceChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['H1 (Full AI)', 'H2 (AI-Led)', 'H3 (Partnership)', 'H4 (Human-Led)', 'H5 (Full Human)'],
+                    datasets: [{
+                        label: 'Worker Preference',
+                        data: [10, 25, 45, 15, 5],
+                        backgroundColor: 'rgba(251, 191, 36, 0.7)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Distribution of Preferred Human Agency (Illustrative)' }
+                    },
+                     scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            const tabContentContainer = document.getElementById('tab-content');
+            
+            function updateTabContent(tabKey) {
+                const data = tabData[tabKey];
+                tabContentContainer.innerHTML = data.content;
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    if(t.dataset.tab === tabKey) {
+                        t.classList.add('active');
+                    }
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    updateTabContent(tab.dataset.tab);
+                });
+            });
+            updateTabContent('technologists');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            const navBar = document.getElementById('navbar');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: `-${navBar.offsetHeight}px 0px 0px 0px`,
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
