@@ -240,7 +240,7 @@
                 <div class="grid md:grid-cols-2 gap-8">
                     <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
                         <div class="flex items-center mb-3"><span class="text-3xl mr-4">🎨</span><h5 class="font-semibold text-lg text-white">Guiding Text-to-Image Generation</h5></div>
-                        <p class="text-gray-400">This is its most famous use case. While CLIP doesn't generate images, it acts as the crucial **quality checker and steering wheel** for models like <b class="font-medium text-white">DALL-E 2</b> and <b class="font-medium text-white">Stable Diffusion</b>. It ensures the final image is semantically faithful to the text prompt.</p>
+                        <p class="text-gray-400">In systems like <b class="font-medium text-white">DALL-E 2</b>, CLIP acts as the essential navigator in a two-stage process. <b>1. The Prior:</b> A model takes your text prompt, uses CLIP's text encoder to understand it, and predicts a target <b class="font-medium text-white">CLIP image embedding</b>. This creates a conceptual goal. <b>2. The Decoder:</b> A diffusion model then takes this target embedding and generates an image to match it. CLIP provides both the shared meaning space and the guidance system for the whole process.</p>
                     </div>
                     <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 hover:shadow-md hover:shadow-blue-500/10 transition-shadow">
                         <div class="flex items-center mb-3"><span class="text-3xl mr-4">🔍</span><h5 class="font-semibold text-lg text-white">Semantic Search & Retrieval</h5></div>
@@ -452,14 +452,16 @@ def classify_image(image_path, class_labels):
             });
             
             // Render Math Equations with KaTeX
-            if (window.renderMathInElement) {
-                renderMathInElement(document.body, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false}
-                    ]
-                });
-            }
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.renderMathInElement) {
+                    renderMathInElement(document.body, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ]
+                    });
+                }
+            });
         });
     </script>
 </body>
