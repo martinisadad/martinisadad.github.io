@@ -290,7 +290,7 @@
             <div class="text-center mb-12"><span class="text-blue-400 font-semibold">Critical Perspectives</span><h3 class="text-3xl md:text-4xl font-bold mt-2 text-white">Limitations, Biases, and the Path Forward</h3><p class="text-lg text-gray-400 max-w-3xl mx-auto mt-4">No technology is a silver bullet. A responsible engineer must understand where these models fail and the societal biases they inherit. Recognizing these flaws is the first step toward building better, fairer systems.</p></div>
             <div class="grid md:grid-cols-2 gap-8 items-start">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-semibold mb-4 text-white">Functional Limitations & Active Solutions</h4>
+                    <h4 class="text-xl font-semibold mb-4 text-white">Functional Limitations & Societal Impact</h4>
                     <div id="accordion-container" class="space-y-4">
                         <!-- Accordion Item 1 -->
                         <div class="accordion-item bg-gray-900 rounded-lg">
@@ -332,9 +332,28 @@
                                 <p class="text-gray-400"><b class="text-gray-300">The Problem:</b> Performance drops on data unlike its training set (e.g., web photos vs. handwritten digits). <br><b class="text-gray-300">The Solution:</b> Adapt the model. The simplest method is <b>domain adaptation</b> by fine-tuning on a small amount of data from the target domain. More advanced methods like <b>Test-Time Adaptation (TTA)</b> learn to adapt to new data distributions "on the fly" during inference, without needing new labels.</p>
                             </div>
                         </div>
+                         <!-- Accordion Item 5 -->
+                        <div class="accordion-item bg-gray-900 rounded-lg">
+                            <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold text-gray-200">
+                                The Accessibility Gap
+                                <div class="accordion-arrow w-3 h-3 border-r-2 border-b-2 border-gray-400 transform -rotate-45"></div>
+                            </button>
+                             <div class="accordion-content">
+                                <p class="text-gray-400 mb-4"><b class="text-gray-300">The Problem:</b> The model underperforms on data from underrepresented groups like blind and low-vision (BLV) users, failing to recognize important disability-related objects and concepts.</p>
+                                <ul class="space-y-2 text-gray-400">
+                                    <li><b class="text-blue-300">Data-Centric Solutions:</b> Fix the source by training on targeted datasets from BLV users (e.g., VizWiz), augmenting data with disability-related objects, and using richer, more descriptive text.</li>
+                                    <li><b class="text-blue-300">Model-Centric Solutions:</b> Adapt the model via domain-specific fine-tuning, use few-shot learning to teach it new objects on the fly, and apply advanced debiasing algorithms.</li>
+                                    <li><b class="text-blue-300">System-Level Solutions:</b> Build smarter applications that allow for user personalization, interactive dialogue for clarification, and community feedback loops to continuously improve the model.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700"><h4 class="text-xl font-semibold mb-4 text-white">The Critical Issue: The Accessibility Gap</h4><p class="text-gray-400 mb-4">A model's utility is tied to its training data. CLIP systematically underperforms on data from underrepresented groups, undermining its potential for good. This chart shows the stark accuracy drop on images from blind and low-vision (BLV) users.</p><div class="chart-container"><canvas id="biasChart"></canvas></div></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-semibold mb-4 text-white">Visualizing the Gap</h4>
+                    <p class="text-gray-400 mb-4">This chart highlights the real-world impact of biased training data, showing the stark accuracy drop on images from blind and low-vision (BLV) users.</p>
+                    <div class="chart-container"><canvas id="biasChart"></canvas></div>
+                </div>
             </div>
             <div class="mt-12 text-center bg-gray-800 p-8 rounded-xl border border-gray-700"><h4 class="text-2xl font-bold text-white">The Path Forward: From Representation to Reasoning</h4><p class="text-lg text-gray-300 max-w-3xl mx-auto mt-4">CLIP learned to create good <span class="font-semibold text-blue-400">representations</span>. Frozen models enabled basic <span class="font-semibold text-blue-400">reasoning</span>. The future, with models like GPT-4o and Gemini, is about natively integrated, multimodal <span class="font-semibold text-blue-400">understanding</span>. The principles pioneered by CLIP are the essential foundation for this next generation of AI.</p></div>
         </section>
@@ -534,7 +553,7 @@ def classify_image(image_path, class_labels):
             });
             
             // Render Math Equations with KaTeX
-            if (window.renderMathInElement) {
+             if (window.renderMathInElement) {
                 renderMathInElement(document.body, {
                     delimiters: [
                         {left: '$$', right: '$$', display: true},
