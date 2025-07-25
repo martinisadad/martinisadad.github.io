@@ -37,15 +37,16 @@
         .modal-content { background: white; padding: 2.5rem; border-radius: 0.5rem; max-width: 52rem; width: 90%; max-height: 85vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease; position: relative; }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         .modal-close { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; font-weight: bold; line-height: 1; cursor: pointer; color: #64748b; }
-        .loss-breakdown-button { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background-color: #f59e0b; color: white; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
-        .loss-breakdown-button:hover { background-color: #d97706; }
+        .deep-dive-button { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background-color: #f59e0b; color: white; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .deep-dive-button:hover { background-color: #d97706; }
         .modal-section-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #f59e0b; padding-bottom: 0.25rem; margin-top: 1.5rem; margin-bottom: 1rem; }
         .chart-container {
             position: relative;
             width: 100%;
             max-width: 800px;
-            margin: auto;
-            height: 500px; /* Explicit height to prevent collapsing */
+            margin-left: auto;
+            margin-right: auto;
+            height: 450px; /* Explicit, stable height */
         }
     </style>
 </head>
@@ -82,8 +83,8 @@
             <p class="text-slate-600 mb-8 max-w-4xl">DALL-E 1's brilliance was in its two-stage decomposition of the problem. Stage 1: Learn a compressed, discrete vocabulary for visual concepts, analogous to words in a language. Stage 2: Learn to write a "story" using this visual vocabulary, guided by a text prompt. This approach cleverly sidestepped the difficulty of directly modeling raw pixels in a high-dimensional space.</p>
             
             <div class="bg-slate-100 p-6 md:p-8 rounded-xl space-y-8">
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-4 text-center">Stage 1: Learning the Visual Vocabulary (dVAE)</h3>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Stage 1: Learning the Visual Vocabulary (dVAE)</h3>
                     <div class="flex flex-col md:flex-row items-stretch justify-center gap-4">
                         <div class="diagram-box flex-1"><h4 class="font-semibold text-slate-700">Input Image $x$</h4></div>
                         <div class="diagram-arrow">&rarr;</div>
@@ -95,11 +96,11 @@
                          <div class="diagram-arrow">&rarr;</div>
                         <div class="diagram-box flex-1"><h4 class="font-semibold text-slate-700">Reconstructed Image $\hat{x}$</h4></div>
                     </div>
-                    <div class="mt-4 text-center text-sm text-slate-500 italic"><strong>A Note on Terminology:</strong> The DALL-E 1 paper uses the term discrete VAE (dVAE), which for all practical purposes refers to the same mechanism as a Vector-Quantized VAE (VQ-VAE).</div>
+                    <div class="mt-4 text-sm text-slate-500 italic"><strong>A Note on Terminology:</strong> The DALL-E 1 paper uses the term discrete VAE (dVAE), which for all practical purposes refers to the same mechanism as a Vector-Quantized VAE (VQ-VAE).</div>
                 </div>
                 
-                <div>
-                     <h3 class="text-xl font-semibold text-slate-800 mb-4 text-center">Stage 2: Generating Images with a Transformer</h3>
+                <div class="text-center">
+                     <h3 class="text-xl font-semibold text-slate-800 mb-4">Stage 2: Generating Images with a Transformer</h3>
                      <div class="flex flex-col md:flex-row items-stretch justify-center gap-4">
                         <div class="diagram-box flex-1"><h4 class="font-semibold text-slate-700">Text & Image Tokens</h4><p class="text-sm text-slate-500">[Text]...[Image]...</p></div>
                         <div class="diagram-arrow">&rarr;</div>
@@ -109,6 +110,7 @@
                         <div class="diagram-arrow">&rarr;</div>
                         <div class="diagram-box flex-1"><h4 class="font-semibold text-slate-700">dVAE Decoder</h4><p class="text-sm text-slate-500">Renders the final image</p></div>
                     </div>
+                    <div data-modal="dalle1-transformer" class="deep-dive-button">Click for a Detailed Breakdown of the Transformer Stage</div>
                 </div>
 
                 <details>
@@ -116,7 +118,7 @@
                     <div class="math-block text-sm text-center">
                         <p>The dVAE (VQ-VAE) is trained by minimizing a loss function $\mathcal{L}$ with three components:</p>
                         $$ \mathcal{L} = \underbrace{\| x - \hat{x} \|^2}_{\text{Reconstruction Loss}} + \underbrace{\| \text{sg}[z_e(x)] - e \|^2_2}_{\text{Codebook Loss}} + \underbrace{\beta \| z_e(x) - \text{sg}[e] \|^2_2}_{\text{Commitment Loss}} $$
-                        <div data-modal="vq-vae-loss" class="loss-breakdown-button">Click for a Detailed Breakdown of the Loss Function</div>
+                        <div data-modal="vq-vae-loss" class="deep-dive-button">Click for a Detailed Breakdown of the Loss Function</div>
                     </div>
                 </details>
             </div>
@@ -189,7 +191,7 @@
                         <div class="modal-section-title !text-left !border-amber-500">Diffusion Model (Decoder/Prior) Objective</div>
                         <p>The model is trained to predict the noise $\epsilon$ that was added to a clean image $x_0$ to produce a noisy image $x_t$ at timestep $t$. The simplified training objective is to minimize the mean squared error between the true noise and the predicted noise $\epsilon_\theta$:</p>
                         $$ \mathcal{L}_{simple} = \mathbb{E}_{t, x_0, \epsilon} \left[ \| \epsilon - \epsilon_\theta(\sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, t, c) \|^2 \right] $$
-                        <p class="mt-4">Where $c$ is the conditioning information (e.g., the CLIP image embedding $I_e$ for the decoder, or the text embedding $T_e$ for the diffusion prior), and $\bar{\alpha}_t$ is derived from a predefined noise schedule.</p>
+                        <p class="mt-4">Where $c$ is the conditioning information (e.g., the CLIP image embedding for the decoder, or the text embedding for the diffusion prior), and $\bar{\alpha}_t$ is derived from a predefined noise schedule.</p>
                     </div>
                 </details>
             </div>
@@ -271,6 +273,35 @@
 
             // Modal logic
             const modalData = {
+                'dalle1-transformer': {
+                    title: 'Deep Dive: The DALL-E 1 Transformer Stage',
+                    content: `
+                        <p class="mb-4">The Transformer in DALL-E 1 acts like a powerful language model, but instead of just writing text, it learns to "write" a picture by generating a sequence of visual tokens that follow a text prompt.</p>
+                        
+                        <div class="modal-section-title">Combining Text and Image Tokens</div>
+                        <p class="mb-2">The key idea is to treat both text and the dVAE's image representation as a single, unified stream of data.</p>
+                        <ol class="list-decimal list-inside mb-4 pl-4">
+                            <li><strong>Text Tokenization:</strong> The text prompt (e.g., "an armchair in the shape of an avocado") is converted into a sequence of standard text tokens (e.g., 32 tokens).</li>
+                            <li><strong>Image Tokenization:</strong> The corresponding image is passed through the dVAE encoder, producing a 32x32 grid of "visual words". This grid is then <strong>flattened</strong> into a one-dimensional sequence of 1024 (32 x 32) image tokens.</li>
+                            <li><strong>Concatenation:</strong> The two sequences are simply concatenated into one long sequence of 1056 tokens (32 text + 1024 image). This single stream is the input for the Transformer.</li>
+                        </ol>
+                        <p class="italic bg-amber-50 border-l-4 border-amber-400 p-4 rounded"><b>Analogy:</b> Think of it like writing a book where the first chapter is in English (the text prompt) and the following chapters are in a "visual language" (the image tokens). The Transformer learns the grammar of this combined book so it can write the visual chapters itself after reading the English one.</p>
+                        
+                        <div class="modal-section-title">The Autoregressive Training Process</div>
+                        <p class="mb-4">The combined sequence is fed into a large, decoder-only Transformer. Its training follows the standard principle of <strong>autoregressive modeling</strong>, which is identical to how models like GPT are trained. At every position in the sequence, the Transformer must <strong>predict the very next token</strong>, given all the tokens that came before it. This is trained by maximizing the log-likelihood of the sequence using a standard cross-entropy loss function.</p>
+                        <p>By training on a massive dataset of (text, image) pairs, the Transformer learns the deep statistical relationships between text descriptions and the sequences of visual tokens that represent those images.</p>
+
+                        <div class="modal-section-title">How Generation (Inference) Works</div>
+                        <ol class="list-decimal list-inside pl-4">
+                            <li>The user provides a text prompt, which is tokenized.</li>
+                            <li>These text tokens are fed into the Transformer as the initial context.</li>
+                            <li>The model then generates the first image token.</li>
+                            <li>This newly generated token is appended to the sequence, and the model generates the second image token.</li>
+                            <li>This process is repeated autoregressively 1024 times until a full sequence of image tokens is created.</li>
+                            <li>Finally, this 1024-token sequence is reshaped back into a 32x32 grid and passed to the dVAE's decoder, which renders the final pixel-based image.</li>
+                        </ol>
+                    `
+                },
                 'vq-vae-loss': {
                     title: 'Deep Dive: The VQ-VAE Loss Function',
                     content: `
@@ -323,7 +354,7 @@
                     `
                 },
                 'prompt': {
-                    title: 'Input: Text Prompt',
+                    title: 'Deep Dive: Text Prompt',
                     content: `<div class="modal-section-title">Component: Text Prompt</div><p>This is the starting point of the entire pipeline. The user provides a natural language description of the desired image. While simple in concept, the quality and detail of the prompt heavily influence the output. DALL-E 2's architecture is fundamentally about interpreting the semantic essence of this prompt and translating it into pixels.</p>`
                 },
                 'text-encoder': {
@@ -420,7 +451,7 @@
                 options: {
                     indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: false, /* This is crucial */
+                    maintainAspectRatio: false,
                     scales: { x: { beginAtZero: true, max: 10, title: { display: true, text: 'Relative Capability / Sophistication' } } },
                     plugins: { title: { display: true, text: 'Technical Architecture Comparison', font: { size: 18 } }, tooltip: { mode: 'index', intersect: false } }
                 }
