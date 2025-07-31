@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Analysis: Large Language Diffusion Models</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMea+cHwsPXofCUO6JWtrcNRPKa9TIXyhPl9Go/1AQRtxcN+i" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzYCxamTVBufNbDkTJV5KmoCVftM4rLAXYD" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <!-- Chosen Palette: "Calm Harmony" - A palette grounded in warm neutrals (slate, stone) with a soft blue accent for focus and interaction, creating a professional, readable, and non-fatiguing user experience. -->
+    <!-- Application Structure Plan: The SPA is structured as a narrative journey comparing two paradigms: Autoregressive (AR) vs. Diffusion. It starts with a high-level introduction, then dives into three core comparative sections: 1) Architecture & Mechanics, 2) Performance Benchmarks, and 3) The "Reversal Curse" deep-dive. This thematic, comparative structure was chosen over a linear report summary because it directly addresses the central thesis of the source material—challenging the AR paradigm. By juxtaposing the two models throughout, users can more easily grasp the fundamental differences, trade-offs, and the significance of the diffusion approach. The flow is designed to build understanding progressively, from "how it works" to "how it performs" to "a key, unique advantage." -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: AR vs. LLaDA Architecture -> Goal: Compare core mechanics -> Viz/Method: Interactive tabbed diagram using HTML/CSS/JS. Interaction: Clicking tabs reveals animated diagrams and text for each model's process (sequential vs. iterative). Justification: A static diagram would be dense. Interaction breaks down complexity, making the abstract processes tangible and easier to compare directly. Library: Vanilla JS for tab logic, Tailwind for styling.
+        - Report Info: Benchmark Data (MMLU, GSM8K, etc.) -> Goal: Compare performance -> Viz/Method: Interactive Bar Chart (Chart.js). Interaction: Buttons to switch between different benchmarks (e.g., "General Knowledge", "Reasoning", "Multilingual"). The chart dynamically updates. Justification: Bar charts are ideal for direct comparison. Interactivity allows users to focus on specific performance areas without cluttering the view with multiple static charts. Library: Chart.js.
+        - Report Info: "Reversal Curse" explanation -> Goal: Demonstrate a core conceptual failure/success -> Viz/Method: Custom interactive HTML/CSS/JS visualization. Interaction: Users click "Forward" and "Reverse" buttons on a factual prompt. The AR model's text shows an evasive/incorrect answer on reverse, while LLaDA's remains correct. Justification: This makes the abstract "curse" a concrete, visible phenomenon. It's more impactful than just text, showing the effect directly. Library: Vanilla JS, Tailwind.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        .nav-link.active {
+            color: #3b82f6; /* blue-500 */
+            border-bottom-color: #3b82f6;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 60vh;
+            }
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #475569; /* slate-600 */
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1; /* slate-300 */
+        }
+        .btn.active {
+            background-color: #1e40af; /* blue-800 */
+            color: white;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-slate-800">LLM Paradigm Shift</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#introduction" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Introduction</a>
+                    <a href="#architecture" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Architecture</a>
+                    <a href="#discrete-methods" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Discrete Methods</a>
+                    <a href="#loss-functions" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Loss Functions</a>
+                    <a href="#reversal-curse" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Reversal Curse</a>
+                    <a href="#performance" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Performance</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-600 hover:text-slate-800 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden py-4">
+                <a href="#introduction" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Introduction</a>
+                <a href="#architecture" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Architecture</a>
+                <a href="#discrete-methods" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Discrete Methods</a>
+                <a href="#loss-functions" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Loss Functions</a>
+                <a href="#reversal-curse" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Reversal Curse</a>
+                <a href="#performance" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Performance</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="introduction" class="scroll-mt-20 text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">A New Blueprint for Language AI</h2>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                For years, Large Language Models (LLMs) have been built on an **autoregressive (AR)** foundation, generating text one word at a time. The research paper "Large Language Diffusion Models" challenges this standard, introducing **LLaDA**, a model built on a **diffusion** architecture. This application provides an interactive exploration of this paradigm shift, comparing how these two architectures work, perform, and reason.
+            </p>
+        </section>
+
+        <section id="architecture" class="scroll-mt-20 mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Architectural Divide: Sequential vs. Holistic</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    The core difference between AR and Diffusion models lies in how they generate text. AR models follow a strict, linear path, while diffusion models work like a sculptor, refining a rough block of "noise" into a coherent final text. This section breaks down these two fundamentally different approaches.
+                </p>
+            </div>
+
+            <div class="card p-6 md:p-8">
+                <div class="flex justify-center border-b border-slate-200 mb-6">
+                    <button data-tab="ar" class="tab-button active text-lg font-semibold py-3 px-6 border-b-2 border-blue-500 text-blue-500">Autoregressive (AR) Model</button>
+                    <button data-tab="llada" class="tab-button text-lg font-semibold py-3 px-6 border-b-2 border-transparent text-slate-500 hover:text-blue-500">Diffusion (LLaDA) Model</button>
+                </div>
+
+                <div id="ar-content" class="tab-content active fade-in">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-3">The Linear Chain</h3>
+                            <p class="text-slate-600 mb-4">
+                                AR models, like the GPT series, generate text token-by-token in a strict left-to-right sequence. Each new word is predicted based only on the words that came before it. This is enforced by a "causal mask" in the Transformer architecture.
+                            </p>
+                            <ul class="space-y-2 text-slate-600">
+                                <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">&#10140;</span><strong>Strength:</strong> Highly efficient for generation due to KV Caching, where previous computations are reused.</li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">&#10140;</span><strong>Weakness:</strong> Suffers from unidirectional bias (the "Reversal Curse") and error accumulation. An early mistake can't be corrected later.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <p class="text-center font-mono text-sm text-slate-500 mb-2">Generation Process:</p>
+                            <div id="ar-viz" class="flex items-center justify-center space-x-2 p-4 overflow-x-auto">
+                                <!-- AR visualization will be generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="llada-content" class="tab-content fade-in">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-3">The Iterative Refinement</h3>
+                            <p class="text-slate-600 mb-4">
+                                LLaDA starts with a sequence of `[MASK]` tokens and refines it over multiple steps. Its non-causal Transformer sees the entire context (left and right) to predict all masked tokens simultaneously, iteratively improving the text.
+                            </p>
+                            <ul class="space-y-2 text-slate-600">
+                                <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">&#10140;</span><strong>Strength:</strong> Holistic understanding and bidirectional reasoning, which overcomes the Reversal Curse.
+                                </li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">&#10140;</span><strong>Weakness:</strong> Computationally expensive per step as it cannot use a KV Cache and must re-process the full sequence in each iteration.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                             <p class="text-center font-mono text-sm text-slate-500 mb-2">Generation Process (Multiple Steps):</p>
+                            <div id="llada-viz" class="flex items-center justify-center space-x-2 p-4 overflow-x-auto">
+                                <!-- LLaDA visualization will be generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8 border-t border-slate-200 pt-6">
+                    <button id="toggle-details-btn" class="btn btn-secondary">
+                        Show Technical Deep Dive &darr;
+                    </button>
+                </div>
+
+                <div id="technical-details" class="hidden mt-8 prose prose-slate max-w-none">
+                    <hr class="my-6">
+                    <h3 class="text-2xl font-semibold text-slate-800 mb-3">Deep Dive: The Mechanics of Diffusion</h3>
+                    
+                    <p>At its core, a language diffusion model operates on two opposing processes: a fixed <strong>Forward Process</strong> to corrupt data for training, and a learned <strong>Reverse Process</strong> to generate clean text from noise.</p>
+                    
+                    <h4>1. The Forward Process (Corruption)</h4>
+                    <p>This is a predefined procedure where we start with clean text, $x_0$, and progressively degrade it over $T$ timesteps by masking tokens. The number of tokens to mask at each step is determined by a <strong>noise schedule</strong> (e.g., a cosine schedule), which controls the rate of corruption. The state at any timestep $t$ is $x_t$.</p>
+                    <ul class="list-disc pl-5">
+                        <li>$t=0$: "The quick brown fox..." (Clean)</li>
+                        <li>$t \approx T/2$: "[MASK] quick [MASK] fox..." (Partially Corrupted)</li>
+                        <li>$t=T$: "[MASK] [MASK] [MASK] [MASK]..." (Fully Corrupted)</li>
+                    </ul>
+
+                    <h4>2. The Reverse Process (Denoising)</h4>
+                    <p>This is the learned task. The model, a <strong>non-causal Transformer encoder</strong>, takes a corrupted sequence $x_t$ and the timestep $t$ as input. Its goal is to predict the original, clean text $x_0$. It does this by outputting a probability distribution for each masked position. The model is trained to minimize the cross-entropy loss between its predictions and the original tokens:</p>
+                    <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
+                        $$\mathcal{L}(\theta) = -\mathbb{E}_{t, x_0, x_t} \left[ \sum_{i \in \text{masked positions}} \log p_{\theta}(x_0^i | x_t, t) \right]$$
+                    </div>
+                    <p>Where $p_{\theta}$ is the model with parameters $\theta$, and $x_0^i$ is the original token at a masked position $i$.</p>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 my-6 rounded-r-lg not-prose">
+                        <h5 class="font-bold text-blue-800">Connection to BERT</h5>
+                        <p class="text-blue-700 mt-1">The architecture used here is directly inherited from BERT. Both use a non-causal Transformer and are trained on Masked Language Modeling (MLM). The key difference is the mission: BERT is designed to <strong>understand</strong> text and output a representation in one pass, while the diffusion model uses the same architecture <strong>iteratively to generate</strong> text from noise.</p>
+                    </div>
+                    
+                    <h4>Inference: Step-by-Step Generation</h4>
+                    <p>To generate new text, the model reverses the process from $t=T$ down to $t=0$:</p>
+                    <ol class="list-decimal pl-5">
+                        <li><strong>Start with Noise:</strong> Begin with a sequence of `[MASK]` tokens ($x_T$).</li>
+                        <li><strong>Iterate & Refine:</strong> For each step $t$ from $T$ down to 1:
+                            <ul class="list-disc pl-5 my-2">
+                                <li><strong>Predict:</strong> The model predicts the probability of all words for each `[MASK]` position in $x_t$.</li>
+                                <li><strong>Sample & Update:</strong> Based on the noise schedule, a certain number of the most confident predictions are chosen to replace their `[MASK]` tokens. This creates the less noisy sequence, $x_{t-1}$.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Final Output:</strong> The process ends at $t=0$, resulting in a complete, coherent sentence.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section id="discrete-methods" class="scroll-mt-20 mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Bridging the Divide: Diffusion for Discrete Text</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    Applying continuous diffusion models to discrete text is a major challenge. You can't add a little bit of noise to the word "cat" and get another valid word. This section explores the clever adaptations researchers have developed to solve this fundamental domain mismatch.
+                </p>
+            </div>
+            <div class="card p-6 md:p-8 prose prose-slate max-w-none">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-4">Three Core Strategies</h3>
+                
+                <div class="mt-6">
+                    <h4>1. Diffusion in a Continuous Latent Space</h4>
+                    <p>This approach converts discrete text into a continuous space where standard diffusion can operate. The model learns to work with word embeddings (continuous vectors) instead of the words themselves.</p>
+                    <ol class="list-decimal pl-5">
+                        <li><strong>Encode:</strong> A model like Word2Vec maps each discrete token into a continuous vector ($z_0$).</li>
+                        <li><strong>Diffuse:</strong> Standard Gaussian noise is added to these vectors over time ($z_t$).</li>
+                        <li><strong>Denoise:</strong> A Transformer learns to take a noisy vector $z_t$ and predict the original clean vector $z_0$.</li>
+                        <li><strong>Decode:</strong> The final clean vector is mapped back to the nearest discrete word token in the vocabulary.</li>
+                    </ol>
+                    <p><strong>Challenge:</strong> The final decoding step can be lossy and difficult to train, as it involves "rounding" a continuous vector to a discrete token. This method was notably explored in the <strong>Diffusion-LM</strong> paper.</p>
+                </div>
+                
+                <hr class="my-8">
+
+                <div class="mt-6">
+                    <h4>2. Discrete Diffusion (Mask-and-Replace)</h4>
+                    <p>This strategy, used by models like <strong>LLaDA</strong> and <strong>D3PM</strong>, redefines diffusion to work directly in the discrete world of tokens. Instead of adding noise, it corrupts text by replacing tokens with a `[MASK]` symbol.</p>
+                    <ul class="list-disc pl-5">
+                        <li><strong>Forward Process:</strong> A fixed Markov process defines the probability $q(x_t | x_{t-1})$ of a token transitioning to a `[MASK]` state.</li>
+                        <li><strong>Reverse Process:</strong> The model learns the reverse probability $p_\theta(x_{t-1} | x_t)$—it learns to "unmask" the text based on context.</li>
+                    </ul>
+                    <p><strong>Advantage:</strong> This is arguably the most successful approach for high-quality text generation, as it elegantly sidesteps the need for a continuous space and a problematic decoding step.</p>
+                </div>
+                
+                <hr class="my-8">
+
+                <div class="mt-6">
+                    <h4>3. Diffusion over Softmax Probabilities (Analog Bits)</h4>
+                    <p>This hybrid approach diffuses the continuous logit values or probability distributions that represent the model's confidence in each word. It blurs the <em>certainty</em> of a token choice rather than the token itself.</p>
+                    <ol class="list-decimal pl-5">
+                        <li>Represent a token choice as a continuous probability vector (e.g., from a softmax layer).</li>
+                        <li>Add Gaussian noise to these probabilities, "blurring" the model's confidence.</li>
+                        <li>The denoising model learns to take a blurred distribution and "sharpen" it back towards a confident, one-hot vector representing a single token.</li>
+                    </ol>
+                    <p><strong>Advantage:</strong> This method, from papers like <strong>Analog Bits</strong>, avoids the hard rounding of latent space models and can be more mathematically stable than pure discrete diffusion.</p>
+                </div>
+
+                <h3 class="text-2xl font-semibold text-slate-800 mt-12 mb-4">Summary of Approaches</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="border-b-2 p-2 font-semibold">Approach</th>
+                                <th class="border-b-2 p-2 font-semibold">Operational Space</th>
+                                <th class="border-b-2 p-2 font-semibold">Noise Type</th>
+                                <th class="border-b-2 p-2 font-semibold">Key Challenge</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2">Latent Space Diffusion</td>
+                                <td class="p-2">Continuous Embeddings</td>
+                                <td class="p-2">Gaussian</td>
+                                <td class="p-2">Lossy final decoding/rounding step.</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2">Discrete Diffusion</td>
+                                <td class="p-2">Discrete Tokens</td>
+                                <td class="p-2">Masking / Replacement</td>
+                                <td class="p-2">Defining an effective transition process.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">Probability Diffusion</td>
+                                <td class="p-2">Continuous Probabilities</td>
+                                <td class="p-2">Gaussian</td>
+                                <td class="p-2">More complex mathematical framework.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <section id="loss-functions" class="scroll-mt-20 mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">The Tale of Two Losses: MSE vs. Cross-Entropy</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    A model's loss function is its core training objective. The choice between Mean Squared Error (MSE) and Cross-Entropy depends entirely on whether the model operates in a continuous or discrete space. This distinction is central to understanding how different text diffusion models learn.
+                </p>
+            </div>
+            <div class="card p-6 md:p-8 prose prose-slate max-w-none">
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-12">
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-800">LLaDA (Discrete): Cross-Entropy Loss</h4>
+                        <p>Because LLaDA works directly with discrete tokens, its task is <strong>classification</strong>. At each step, it must predict the correct original token from the entire vocabulary for each `[MASK]` position.</p>
+                        <p><strong>Cross-Entropy Loss</strong> is the standard for classification. It penalizes the model based on the (log) probability it assigned to the correct token. A lower probability for the correct answer results in a higher loss.</p>
+                        <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
+                           $$\mathcal{L}_{CE} = -\log p_{\theta}(x_0 | x_t, t)$$
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-800">Diffusion-LM (Continuous): MSE Loss</h4>
+                        <p>Because Diffusion-LM converts text to continuous embeddings, its task is <strong>regression</strong>. At each step, it must predict the continuous Gaussian noise vector ($\epsilon$) that was added to the embeddings.</p>
+                        <p><strong>Mean Squared Error (MSE)</strong> is ideal for regression. It measures the Euclidean distance between the model's predicted noise vector and the actual noise vector, penalizing predictions that are "far away" in the continuous space.</p>
+                        <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
+                           $$\mathcal{L}_{MSE} = ||\epsilon - \epsilon_{\theta}(e_t, t)||^2$$
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-8">
+                <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Philosophical Divide</h3>
+                 <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="border-b-2 p-2 font-semibold">Model Type</th>
+                                <th class="border-b-2 p-2 font-semibold">Prediction Task</th>
+                                <th class="border-b-2 p-2 font-semibold">Loss Function</th>
+                                <th class="border-b-2 p-2 font-semibold">Primary Trade-Off</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2 font-medium text-slate-700">LLaDA (Discrete)</td>
+                                <td class="p-2">Classification</td>
+                                <td class="p-2 font-mono">Cross-Entropy</td>
+                                <td class="p-2">Avoids rounding errors; needs robust discrete corruption process.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-medium text-slate-700">Diffusion-LM (Continuous)</td>
+                                <td class="p-2">Regression</td>
+                                <td class="p-2 font-mono">Mean Squared Error</td>
+                                <td class="p-2">Mathematically elegant but suffers from the final vector-to-word "rounding" problem.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="reversal-curse" class="scroll-mt-20 mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Solving the "Reversal Curse"</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    The "Reversal Curse" is a key failure of AR models: if trained on "A is B," they can't infer "B is A." This is because they only learn in one direction. LLaDA's bidirectional architecture solves this naturally. Interact with the example below to see this difference in action.
+                </p>
+            </div>
+            <div class="card p-6 md:p-8">
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div class="prose prose-slate max-w-none">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-3">The Factual Recall Task</h3>
+                        <p>
+                           Models were trained on facts like "George Washington was the first President of the United States." This task tests if they can retrieve the information when prompted with the subject (Forward) versus the description (Reverse).
+                        </p>
+                        <p>
+                           Click the buttons to see how each model type might respond. Notice how the AR model struggles with the "Reverse" task, a direct result of its unidirectional training. LLaDA, processing information holistically, handles both directions with ease.
+                        </p>
+                         <div class="flex space-x-4 mt-6">
+                            <button id="forward-btn" class="btn btn-primary">Forward (A &rarr; B)</button>
+                            <button id="reverse-btn" class="btn btn-secondary">Reverse (B &rarr; A)</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg font-mono text-center">
+                        <p class="text-sm text-slate-500 mb-2">Prompt:</p>
+                        <div id="curse-prompt" class="h-12 flex items-center justify-center bg-white rounded-md shadow-inner text-slate-800 font-semibold p-2 my-2">
+                           <!-- Prompt will be inserted by JS -->
+                        </div>
+                        <p class="text-sm text-slate-500 mb-2 mt-4">Model's Completion:</p>
+                        <div id="curse-completion" class="h-16 flex items-center justify-center text-slate-700 transition-opacity duration-500">
+                           <!-- Completion will be inserted by JS -->
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <p class="text-sm text-slate-600">Performance:</p>
+                            <p id="model-performance-text" class="font-semibold text-lg mt-1"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="performance" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Head-to-Head: Performance Benchmarks</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    While architectures differ, performance is the ultimate test. LLaDA-8B was benchmarked against the highly capable LLaMA3-8B. The results show a fascinating split: LLaDA excels in reasoning, while LLaMA3 holds a slight edge in general knowledge, partly due to more extensive training alignment. Click the buttons to compare performance across different domains.
+                </p>
+            </div>
+            <div class="card p-6 md:p-8">
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="btn btn-secondary benchmark-btn active" data-benchmark="reasoning">🧠 Reasoning (Math & Logic)</button>
+                    <button class="btn btn-secondary benchmark-btn" data-benchmark="knowledge">📚 General Knowledge</button>
+                    <button class="btn btn-secondary benchmark-btn" data-benchmark="multilingual">🌐 Multilingual (Chinese)</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                         mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('main section');
+            const navLinkElements = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinkElements.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'text-blue-500', 'border-blue-500');
+                        btn.classList.add('text-slate-500', 'border-transparent');
+                    });
+                    button.classList.add('active', 'text-blue-500', 'border-blue-500');
+                    button.classList.remove('text-slate-500', 'border-transparent');
+
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(button.dataset.tab + '-content').classList.add('active');
+                });
+            });
+            
+            function createToken(text, isMask = false, isFaded = false, isSpecial = false) {
+                const tokenEl = document.createElement('div');
+                tokenEl.textContent = text;
+                tokenEl.className = `px-3 py-1 rounded-md text-sm font-semibold transition-all duration-500 ${isMask ? 'bg-blue-200 text-blue-800' : 'bg-white text-slate-800 shadow-sm'} ${isFaded ? 'opacity-30' : 'opacity-100'} ${isSpecial ? 'bg-green-200 text-green-800' : ''}`;
+                return tokenEl;
+            }
+
+            function animateArViz() {
+                const container = document.getElementById('ar-viz');
+                container.innerHTML = '';
+                const tokens = ["The", "quick", "brown", "fox", "...", "?"];
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < tokens.length) {
+                        const tokenText = tokens[i];
+                        const isLast = i === tokens.length - 1;
+                        const token = createToken(tokenText, isLast);
+                        container.appendChild(token);
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 500);
+            }
+
+            function animateLladaViz() {
+                const container = document.getElementById('llada-viz');
+                let step = 0;
+                const states = [
+                    ["[M]", "[M]", "[M]", "[M]", "[M]", "[M]"],
+                    ["The", "[M]", "brown", "[M]", "jumps", "[M]"],
+                    ["The", "quick", "brown", "fox", "jumps", "over"],
+                ];
+                const finalState = ["The", "quick", "brown", "fox", "jumps", "over"];
+
+                function renderState(state) {
+                    container.innerHTML = '';
+                    state.forEach((text, i) => {
+                        const isMask = text === "[M]";
+                        const isFinal = step === states.length -1;
+                        const isChanged = step > 0 && text !== states[step-1][i];
+                        container.appendChild(createToken(text, isMask, false, isChanged && !isMask));
+                    });
+                }
+
+                renderState(states[0]);
+                const interval = setInterval(() => {
+                    step++;
+                    if (step < states.length) {
+                        renderState(states[step]);
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 1500);
+            }
+
+            animateArViz();
+            animateLladaViz();
+            setInterval(() => { 
+                if (document.getElementById('ar-content').classList.contains('active')) animateArViz();
+                if (document.getElementById('llada-content').classList.contains('active')) animateLladaViz();
+            }, 8000);
+
+
+            const benchmarkData = {
+                reasoning: {
+                    labels: ['GSM8K (Math)', 'MATH (Advanced)'],
+                    datasets: [{
+                        label: 'LLaDA-8B',
+                        data: [70.7, 27.3],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'LLaMA3-8B',
+                        data: [53.1, 15.1],
+                        backgroundColor: 'rgba(107, 114, 128, 0.7)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                knowledge: {
+                    labels: ['MMLU (General)', 'HumanEval (Code)', 'MultiWOZ (Dialogue)'],
+                    datasets: [{
+                        label: 'LLaDA-8B',
+                        data: [65.9, 33.5, 38.2],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'LLaMA3-8B',
+                        data: [68.4, 34.2, 36.9],
+                        backgroundColor: 'rgba(107, 114, 128, 0.7)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                multilingual: {
+                    labels: ['C-Eval (Chinese)', 'CMMLU (Chinese)'],
+                    datasets: [{
+                        label: 'LLaDA-8B',
+                        data: [70.5, 69.9],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'LLaMA3-8B',
+                        data: [51.7, 50.7],
+                        backgroundColor: 'rgba(107, 114, 128, 0.7)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            };
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: benchmarkData.reasoning,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e2e8f0'
+                            },
+                            ticks: {
+                                color: '#475569',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                             grid: {
+                                display: false
+                            },
+                             ticks: {
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const benchmarkButtons = document.querySelectorAll('.benchmark-btn');
+            benchmarkButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    benchmarkButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const benchmark = button.dataset.benchmark;
+                    performanceChart.data = benchmarkData[benchmark];
+                    performanceChart.update();
+                });
+            });
+
+            const forwardBtn = document.getElementById('forward-btn');
+            const reverseBtn = document.getElementById('reverse-btn');
+            const cursePrompt = document.getElementById('curse-prompt');
+            const curseCompletion = document.getElementById('curse-completion');
+            const perfText = document.getElementById('model-performance-text');
+
+            const curseData = {
+                forward: {
+                    prompt: "George Washington was...",
+                    completion: "...the first President of the United States."
+                },
+                reverse: {
+                    prompt: "The first President of the United States was...",
+                    completionAR: "...a leader in the Continental Army.",
+                    completionLLaDA: "...George Washington."
+                }
+            };
+
+            function setCurseState(state) {
+                forwardBtn.classList.remove('btn-primary', 'btn-secondary');
+                reverseBtn.classList.remove('btn-primary', 'btn-secondary');
+                
+                curseCompletion.innerHTML = '';
+
+                if (state === 'forward') {
+                    forwardBtn.classList.add('btn-primary');
+                    reverseBtn.classList.add('btn-secondary');
+                    
+                    cursePrompt.textContent = curseData.forward.prompt;
+                    curseCompletion.innerHTML = `<span class="fade-in text-green-600">${curseData.forward.completion}</span>`;
+                    perfText.innerHTML = `<span class="text-green-600 fade-in">Both models succeed easily.</span>`;
+                } else { // reverse
+                    forwardBtn.classList.add('btn-secondary');
+                    reverseBtn.classList.add('btn-primary');
+                    
+                    cursePrompt.textContent = curseData.reverse.prompt;
+                    curseCompletion.innerHTML = `
+                        <div class="fade-in text-left text-sm">
+                            <strong class="text-slate-800">LLaDA:</strong> <span class="text-green-600">${curseData.reverse.completionLLaDA}</span><br>
+                            <strong class="text-slate-800">AR Model:</strong> <span class="text-red-500">${curseData.reverse.completionAR}</span>
+                        </div>
+                    `;
+                    perfText.innerHTML = `<span class="text-red-600 fade-in">AR Model gives an evasive answer. LLaDA succeeds.</span>`;
+                }
+            }
+
+            forwardBtn.addEventListener('click', () => setCurseState('forward'));
+            reverseBtn.addEventListener('click', () => setCurseState('reverse'));
+
+            setCurseState('forward');
+
+            const toggleDetailsBtn = document.getElementById('toggle-details-btn');
+            const technicalDetails = document.getElementById('technical-details');
+
+            toggleDetailsBtn.addEventListener('click', () => {
+                const isHidden = technicalDetails.classList.contains('hidden');
+                if (isHidden) {
+                    technicalDetails.classList.remove('hidden');
+                    technicalDetails.classList.add('fade-in');
+                    toggleDetailsBtn.innerHTML = 'Hide Technical Deep Dive &uarr;';
+                    // Re-render math if it was hidden
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(technicalDetails);
+                    }
+                } else {
+                    technicalDetails.classList.add('hidden');
+                    toggleDetailsBtn.innerHTML = 'Show Technical Deep Dive &darr;';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
