@@ -135,7 +135,7 @@
         <section id="introduction" class="scroll-mt-20 text-center mb-16 md:mb-24">
             <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">A New Blueprint for Language AI</h2>
             <p class="max-w-3xl mx-auto text-lg text-slate-600">
-                For years, Large Language Models (LLMs) have been built on an **autoregressive (AR)** foundation, generating text one word at a time. The research paper "Large Language Diffusion Models" challenges this standard, introducing **LLaDA**, a model built on a **diffusion** architecture. This application provides an interactive exploration of this paradigm shift, comparing how these two architectures work, perform, and reason.
+                For years, Large Language Models (LLMs) have been built on an **autoregressive (AR)** foundation, generating text one word at a time. The research paper "Large Language Diffusion Models" challenges this standard, introducing **LLaDA**, a model built on a **diffusion** architecture.
             </p>
         </section>
 
@@ -205,23 +205,23 @@
                 <div id="technical-details" class="hidden mt-8 prose prose-slate max-w-none">
                     <hr class="my-6">
                     <h3 class="text-2xl font-semibold text-slate-800 mb-3">Deep Dive: The Mechanics of Diffusion</h3>
-                    
                     <p>At its core, a language diffusion model operates on two opposing processes: a fixed <strong>Forward Process</strong> to corrupt data for training, and a learned <strong>Reverse Process</strong> to generate clean text from noise.</p>
                     
                     <h4>1. The Forward Process (Corruption)</h4>
-                    <p>This is a predefined procedure where we start with clean text, $x_0$, and progressively degrade it over $T$ timesteps by masking tokens. The number of tokens to mask at each step is determined by a <strong>noise schedule</strong> (e.g., a cosine schedule), which controls the rate of corruption. The state at any timestep $t$ is $x_t$.</p>
-                    <ul class="list-disc pl-5">
-                        <li>$t=0$: "The quick brown fox..." (Clean)</li>
-                        <li>$t \approx T/2$: "[MASK] quick [MASK] fox..." (Partially Corrupted)</li>
-                        <li>$t=T$: "[MASK] [MASK] [MASK] [MASK]..." (Fully Corrupted)</li>
-                    </ul>
-
-                    <h4>2. The Reverse Process (Denoising)</h4>
-                    <p>This is the learned task. The model, a <strong>non-causal Transformer encoder</strong>, takes a corrupted sequence $x_t$ and the timestep $t$ as input. Its goal is to predict the original, clean text $x_0$. It does this by outputting a probability distribution for each masked position. The model is trained to minimize the cross-entropy loss between its predictions and the original tokens:</p>
+                    <p>This process progressively corrupts clean text $x_0$ towards a fully masked state $x_T$. Unlike continuous diffusion which adds Gaussian noise, LLaDA uses a masking strategy (an absorbing Markov process). A noise schedule (e.g., cosine) defines $\gamma_t \in [0,1]$, the ratio of tokens to be masked at timestep $t$. The forward process $q(x_t | x_0)$ is defined such that we can sample a noisy state directly from the clean data:
+                    </p>
                     <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
-                        $$\mathcal{L}(\theta) = -\mathbb{E}_{t, x_0, x_t} \left[ \sum_{i \in \text{masked positions}} \log p_{\theta}(x_0^i | x_t, t) \right]$$
+                         $$ q(x_t | x_0) = \text{Mask}(x_0, \gamma_t) $$
                     </div>
-                    <p>Where $p_{\theta}$ is the model with parameters $\theta$, and $x_0^i$ is the original token at a masked position $i$.</p>
+                    <p>Where $\text{Mask}(x_0, \gamma_t)$ means that for each token in $x_0$, it is independently replaced by `[MASK]` with probability $\gamma_t$, or remains unchanged with probability $1 - \gamma_t$.</p>
+                    
+
+                    <h4>2. The Reverse Process & Training Objective</h4>
+                    <p>The goal is to reverse the corruption. While the theoretical foundation of diffusion aims to learn the step-by-step transition $p_\theta(x_{t-1} | x_t)$, LLaDA adopts a common simplification: the model is trained to predict the original clean data $x_0$ directly from the noisy input $x_t$ and the timestep $t$. The model is optimized using a standard cross-entropy loss, which serves as a simplified objective compared to the full Variational Lower Bound (VLB):</p>
+                    <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
+                        $$ \mathcal{L}(\theta) = - \mathbb{E}_{t, x_0, x_t} \left[ \sum_{i \in M_t} \log p_\theta(\hat{x}_0^i = x_0^i | x_t, t) \right] $$
+                    </div>
+                    <p>Where $M_t$ is the set of indices masked during the forward process at time $t$, and the model predicts the probability that its generated token $\hat{x}_0^i$ matches the original token $x_0^i$ at each masked position.</p>
 
                     <div class="bg-blue-50 border-l-4 border-blue-400 p-4 my-6 rounded-r-lg not-prose">
                         <h5 class="font-bold text-blue-800">Connection to BERT</h5>
@@ -229,13 +229,14 @@
                     </div>
                     
                     <h4>Inference: Step-by-Step Generation</h4>
-                    <p>To generate new text, the model reverses the process from $t=T$ down to $t=0$:</p>
+                    <p>To generate new text, the model reverses the process from $t=T$ down to $t=0$ using a "Mask-Predict" style iterative decoding:</p>
                     <ol class="list-decimal pl-5">
                         <li><strong>Start with Noise:</strong> Begin with a sequence of `[MASK]` tokens ($x_T$).</li>
-                        <li><strong>Iterate & Refine:</strong> For each step $t$ from $T$ down to 1:
+                        <li><strong>Iterate & Refine (for $t=T$ down to 1):</strong>
                             <ul class="list-disc pl-5 my-2">
-                                <li><strong>Predict:</strong> The model predicts the probability of all words for each `[MASK]` position in $x_t$.</li>
-                                <li><strong>Sample & Update:</strong> Based on the noise schedule, a certain number of the most confident predictions are chosen to replace their `[MASK]` tokens. This creates the less noisy sequence, $x_{t-1}$.</li>
+                                <li><strong>Predict:</strong> The model predicts the full clean text $\hat{x}_0 \sim p_\theta(x_0 | x_t)$.</li>
+                                <li><strong>Sample:</strong> Sample new tokens from the predicted probabilities for the currently masked positions.</li>
+                                <li><strong>Re-mask (The critical step):</strong> We do not keep all the sampled tokens. We calculate the number of tokens $k$ to keep based on the schedule difference (from $\gamma_t$ to $\gamma_{t-1}$). We keep the $k$ most confident predictions and re-mask the remaining (less confident) ones. This allows the model to correct its own mistakes in subsequent iterations.</li>
                             </ul>
                         </li>
                         <li><strong>Final Output:</strong> The process ends at $t=0$, resulting in a complete, coherent sentence.</li>
@@ -258,10 +259,10 @@
                     <h4>1. Diffusion in a Continuous Latent Space</h4>
                     <p>This approach converts discrete text into a continuous space where standard diffusion can operate. The model learns to work with word embeddings (continuous vectors) instead of the words themselves.</p>
                     <ol class="list-decimal pl-5">
-                        <li><strong>Encode:</strong> A model like Word2Vec maps each discrete token into a continuous vector ($z_0$).</li>
-                        <li><strong>Diffuse:</strong> Standard Gaussian noise is added to these vectors over time ($z_t$).</li>
-                        <li><strong>Denoise:</strong> A Transformer learns to take a noisy vector $z_t$ and predict the original clean vector $z_0$.</li>
-                        <li><strong>Decode:</strong> The final clean vector is mapped back to the nearest discrete word token in the vocabulary.</li>
+                        <li><strong>Encode:</strong> A model like Word2Vec maps each discrete token into a continuous vector ($x_0$).</li>
+                        <li><strong>Diffuse:</strong> Apply standard Gaussian diffusion. The forward process is $q(x_t | x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t}x_{t-1}, \beta_t\mathbf{I})$. Crucially, this allows sampling at any $t$ directly: $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$, where $\epsilon \sim \mathcal{N}(0, \mathbf{I})$ and $\bar{\alpha}_t$ is derived from the noise schedule $\beta_t$.</li>
+                        <li><strong>Denoise:</strong> A Transformer learns to take a noisy vector $x_t$ and predict the original clean vector $\hat{x}_0$.</li>
+                        <li><strong>Decode/Rounding:</strong> The final denoised latent $\hat{x}_0$ must be mapped back to a discrete token. This is typically formalized as finding the nearest embedding vector: $w = \text{argmin}_{w'} ||\hat{x}_0 - \text{Emb}(w')||^2$.</li>
                     </ol>
                     <p><strong>Challenge:</strong> The final decoding step can be lossy and difficult to train, as it involves "rounding" a continuous vector to a discrete token. This method was notably explored in the <strong>Diffusion-LM</strong> paper.</p>
                 </div>
@@ -270,10 +271,10 @@
 
                 <div class="mt-6">
                     <h4>2. Discrete Diffusion (Mask-and-Replace)</h4>
-                    <p>This strategy, used by models like <strong>LLaDA</strong> and <strong>D3PM</strong>, redefines diffusion to work directly in the discrete world of tokens. Instead of adding noise, it corrupts text by replacing tokens with a `[MASK]` symbol.</p>
+                    <p>This strategy, formalized in <strong>D3PM</strong> and adapted by <strong>LLaDA</strong>, redefines diffusion to work directly in the discrete world of tokens. The corruption is defined by a Markov transition matrix $Q_t$, rather than Gaussian noise.</p>
                     <ul class="list-disc pl-5">
-                        <li><strong>Forward Process:</strong> A fixed Markov process defines the probability $q(x_t | x_{t-1})$ of a token transitioning to a `[MASK]` state.</li>
-                        <li><strong>Reverse Process:</strong> The model learns the reverse probability $p_\theta(x_{t-1} | x_t)$—it learns to "unmask" the text based on context.</li>
+                        <li><strong>Forward Process:</strong> Defined as $q(x_t | x_{t-1}) = x_{t-1}Q_t$. The matrix $Q_t$ specifies the probability of any token transitioning to any other token (or mask) at time $t$.</li>
+                        <li><strong>Reverse Process:</strong> The model learns the reverse probability $p_\theta(x_{t-1} | x_t)$. This aims to approximate the true posterior $q(x_{t-1} | x_t, x_0)$, which is tractable in discrete Markov chains. In practice, this is often simplified by training the model to predict $\hat{x}_0$ directly.</li>
                     </ul>
                     <p><strong>Advantage:</strong> This is arguably the most successful approach for high-quality text generation, as it elegantly sidesteps the need for a continuous space and a problematic decoding step.</p>
                 </div>
@@ -341,7 +342,7 @@
                         <p>Because LLaDA works directly with discrete tokens, its task is <strong>classification</strong>. At each step, it must predict the correct original token from the entire vocabulary for each `[MASK]` position.</p>
                         <p><strong>Cross-Entropy Loss</strong> is the standard for classification. It penalizes the model based on the (log) probability it assigned to the correct token. A lower probability for the correct answer results in a higher loss.</p>
                         <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
-                           $$\mathcal{L}_{CE} = -\log p_{\theta}(x_0 | x_t, t)$$
+                           $$ \mathcal{L}_{CE} = - \mathbb{E}_{t, x_0, x_t} \left[ \sum_{i} \log p_\theta(\hat{x}_0^i | x_t, t) \right] $$
                         </div>
                     </div>
                     <div>
@@ -349,7 +350,7 @@
                         <p>Because Diffusion-LM converts text to continuous embeddings, its task is <strong>regression</strong>. At each step, it must predict the continuous Gaussian noise vector ($\epsilon$) that was added to the embeddings.</p>
                         <p><strong>Mean Squared Error (MSE)</strong> is ideal for regression. It measures the Euclidean distance between the model's predicted noise vector and the actual noise vector, penalizing predictions that are "far away" in the continuous space.</p>
                         <div class="bg-slate-100 p-4 rounded-lg my-4 text-center">
-                           $$\mathcal{L}_{MSE} = ||\epsilon - \epsilon_{\theta}(e_t, t)||^2$$
+                           $$ \mathcal{L}_{MSE} = \mathbb{E}_{t, x_0, \epsilon} \left[ ||\epsilon - \epsilon_{\theta}(x_t, t)||^2 \right] $$
                         </div>
                     </div>
                 </div>
@@ -761,3 +762,4 @@
     </script>
 </body>
 </html>
+
