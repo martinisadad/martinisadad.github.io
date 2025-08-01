@@ -110,6 +110,7 @@
                     <a href="#architecture" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Architecture</a>
                     <a href="#discrete-methods" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Discrete Methods</a>
                     <a href="#loss-functions" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Loss Functions</a>
+                    <a href="#speed-paradox" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Inference Speed</a>
                     <a href="#reversal-curse" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Reversal Curse</a>
                     <a href="#performance" class="nav-link text-slate-600 hover:text-blue-500 border-b-2 border-transparent pb-1">Performance</a>
                 </div>
@@ -124,6 +125,7 @@
                 <a href="#architecture" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Architecture</a>
                 <a href="#discrete-methods" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Discrete Methods</a>
                 <a href="#loss-functions" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Loss Functions</a>
+                <a href="#speed-paradox" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Inference Speed</a>
                 <a href="#reversal-curse" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Reversal Curse</a>
                 <a href="#performance" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100 rounded-md">Performance</a>
             </div>
@@ -135,7 +137,7 @@
         <section id="introduction" class="scroll-mt-20 text-center mb-16 md:mb-24">
             <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">A New Blueprint for Language AI</h2>
             <p class="max-w-3xl mx-auto text-lg text-slate-600">
-                For years, Large Language Models (LLMs) have been built on an **autoregressive (AR)** foundation, generating text one word at a time. The research paper "Large Language Diffusion Models" challenges this standard, introducing **LLaDA**, a model built on a **diffusion** architecture.
+                For years, Large Language Models (LLMs) have been built on an **autoregressive (AR)** foundation, generating text one word at a time. The research paper "Large Language Diffusion Models" challenges this standard, introducing **LLaDA**, a model built on a **diffusion** architecture. This application provides an interactive exploration of this paradigm shift, comparing how these two architectures work, perform, and reason.
             </p>
         </section>
 
@@ -382,6 +384,51 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+        
+        <section id="speed-paradox" class="scroll-mt-20 mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">dLLM Inference Speed: From Bottleneck to Breakthrough</h2>
+                <p class="max-w-3xl mx-auto mt-2 text-lg text-slate-600">
+                    While vanilla diffusion models are slow, recent breakthroughs are rapidly closing the efficiency gap. Cutting-edge research is solving the "expensive steps" problem, turning the theoretical advantage of parallel generation into a practical reality.
+                </p>
+            </div>
+            <div class="card p-6 md:p-8 prose prose-slate max-w-none">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-4">The Vanilla dLLM Bottleneck: No KV Cache</h3>
+                <p>The primary reason vanilla dLLMs are slow during inference is their inability to use a Key-Value (KV) Cache, a critical optimization for autoregressive (AR) models.</p>
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-12 mt-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-800">How KV Caching Speeds Up AR Models</h4>
+                        <p>AR models generate one token at a time. To predict token 100, the model processes the first 99 tokens. In this process, it computes internal state vectors (Keys and Values) for each of those 99 tokens. A KV Cache saves these vectors. To predict token 101, the model only needs to compute the K/V for token 100 and append it to the cache, reusing the first 99. This makes each step after the first incredibly fast.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-800">Why Vanilla dLLMs Can't Use It</h4>
+                        <p>dLLMs refine the *entire sentence* at each step. The input for step `t` (e.g., `The [M] is [M]`) is completely different from the input for step `t-1` (e.g., `The sun is shining`). Since the whole input changes, the K/V vectors from the previous step are useless. The model must perform a full, expensive forward pass over the entire sequence at every single refinement step, making each step computationally intensive.</p>
+                    </div>
+                </div>
+                <hr class="my-8">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-4">The Breakthroughs</h3>
+                <p>The promise of dLLMs—generating multiple tokens in parallel—is being unlocked by two key innovations highlighted in research like <strong>Fast-dLLM</strong>:</p>
+                <div class="mt-6">
+                    <h4>1. A Novel Block-wise Approximate KV Cache</h4>
+                    <p>This is the most critical advance. While a vanilla dLLM cannot use a KV cache because the entire input changes, this new method reintroduces caching with a clever approximation:</p>
+                    <ol class="list-decimal pl-5">
+                        <li><strong>Block-wise Processing:</strong> The model divides the input sequence into smaller blocks of tokens.</li>
+                        <li><strong>Change Detection:</strong> At each denoising step, it identifies which blocks have changed significantly.</li>
+                        <li><strong>Cache Reuse:</strong> For blocks that remain stable or change only slightly, the model can reuse their previously computed Key/Value vectors, avoiding a full, expensive re-computation for the entire sequence.</li>
+                    </ol>
+                    <p>This mechanism drastically reduces the cost of each denoising step, turning the "few, expensive steps" into "a few, <strong>much cheaper steps</strong>."</p>
+                </div>
+                <div class="mt-6">
+                    <h4>2. Confidence-Aware Parallel Decoding</h4>
+                    <p>This is a smarter sampling strategy that improves both speed and quality. Instead of replacing a fixed number of `[MASK]` tokens at each step, this dynamic approach monitors the model's prediction confidence and decides to replace more tokens in a single step if the predictions are highly confident, taking bigger jumps towards the final sentence.</p>
+                </div>
+                 <h3 class="text-2xl font-semibold text-slate-800 mt-12 mb-4">The Impact: Real-World Speed</h3>
+                 <p>These optimizations are not just theoretical. Commercial-scale dLLMs for code generation, like <strong>Mercury Coder</strong>, are now reported to be <strong>5-10x faster</strong> than traditional LLMs, achieving speeds over 1000 tokens/second. Research like Fast-dLLM has shown throughput improvements of up to <strong>27.6x</strong> over vanilla dLLMs.</p>
+                 <p class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg not-prose text-blue-800">
+                    <strong>The Bottom Line:</strong> While dLLMs are a newer development, techniques that solve the caching problem are allowing their theoretical parallel advantage to translate into superior real-world performance, especially for tasks like code generation.
+                </p>
             </div>
         </section>
 
