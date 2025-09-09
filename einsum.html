@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Slate & Sky -->
-    <!-- Application Structure Plan: The application is designed as a single-page, scrollable guide divided into logical, thematic sections. This structure was chosen to guide the user from foundational concepts to practical applications in a narrative flow, making a complex topic more digestible. The user starts with a high-level "why," then deconstructs the syntax, sees live interactive examples, explores an advanced, real-world application, and finally understands the benefits via a data visualization. The key interaction is a central, tab-based component in the "Einsum in Action" section, allowing users to actively select and explore different operations without leaving the page. This promotes hands-on learning and direct comparison between various `einsum` use cases, which is more effective than a static document. -->
+    <!-- Application Structure Plan: The application is designed as a single-page, scrollable guide divided into logical, thematic sections. This structure was chosen to guide the user from foundational concepts to practical applications in a narrative flow, making a complex topic more digestible. The user starts with a high-level "why JAX," then "why einsum," then deconstructs the syntax, sees live interactive examples, explores an advanced, real-world application, and finally understands the benefits via a data visualization. The key interaction is a central, tab-based component in the "Einsum in Action" section, allowing users to actively select and explore different operations without leaving the page. This promotes hands-on learning and direct comparison between various `einsum` use cases, which is more effective than a static document. -->
     <!-- Visualization & Content Choices: 
         - Report Info: `einsum` syntax rules. Goal: Inform/Organize. Method: Styled HTML (divs, code blocks) with distinct colors for input/summation/output indices. Interaction: Static but visually segmented for clarity. Justification: Breaks down the complex string syntax into understandable parts.
         - Report Info: Common tensor operations (transpose, matmul, etc.). Goal: Compare/Organize. Method: Interactive tabbed component. Interaction: User clicks tabs to switch between operations. This dynamically updates a code display, an explanation panel, and a visual representation of the tensors (using styled HTML divs). Justification: This is the core learning tool. It directly connects the abstract `einsum` string to a concrete operation, its code, and its visual result, reinforcing the concept through active user engagement.
@@ -86,6 +86,7 @@
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#why-jax" class="text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">Why JAX?</a>
                         <a href="#intro" class="text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">Intro</a>
                         <a href="#decoding" class="text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">Decoding</a>
                         <a href="#action" class="text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">In Action</a>
@@ -98,6 +99,13 @@
     </header>
 
     <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    
+        <section id="why-jax" class="text-center mb-16 scroll-mt-20">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">Why JAX? The Engine of Modern AI</h1>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                JAX has rapidly become one of the most critical foundations for modern AI and Large Language Model (LLM) development. By combining automatic differentiation (`grad`), Just-In-Time (JIT) compilation (`jit`), and automatic vectorization (`vmap`), JAX delivers incredible performance on accelerators like GPUs and TPUs. It's the engine behind cutting-edge research and large-scale models from places like Google DeepMind. Learning to wield its powerful, expressive tools is essential for any serious AI developer, and few tools are as powerful or expressive as `einsum`.
+            </p>
+        </section>
 
         <section id="intro" class="text-center mb-16 scroll-mt-20">
             <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">Meet Your New Superpower: `einsum`</h1>
