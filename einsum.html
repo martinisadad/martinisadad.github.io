@@ -65,6 +65,15 @@
             font-weight: 500;
             min-height: 30px;
         }
+        /* Syntax Highlighting */
+        .token-keyword { color: #f9a8d4; } /* pink-300 */
+        .token-function { color: #7dd3fc; } /* sky-300 */
+        .token-string { color: #fcd34d; } /* amber-300 */
+        .token-comment { color: #9ca3af; } /* gray-400 */
+        .token-operator { color: #f9a8d4; } /* pink-300 */
+        .token-number { color: #86efac; } /* green-300 */
+        .token-class { color: #a5b4fc; } /* indigo-300 */
+        .token-punctuation { color: #d1d5db; } /* gray-300 */
     </style>
 </head>
 <body class="antialiased">
@@ -166,18 +175,17 @@
                 
                 <h3 class="text-2xl font-bold mb-4 text-slate-800">The Code</h3>
                 <div class="code-block mb-6">
-<pre><code class="language-python">
-import jax
-import jax.numpy as jnp
-from typing import Optional
+<pre><code class="language-python"><span class="token-keyword">import</span> jax
+<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
+<span class="token-keyword">from</span> typing <span class="token-keyword">import</span> <span class="token-class">Optional</span>
 
-def dot_attention(
-    query: jax.Array, 
-    key: jax.Array, 
-    value: jax.Array, 
-    atten_mask: Optional[jax.Array] = None
-) -> tuple[jax.Array, jax.Array]:
-    """Calculate the attention weights.
+<span class="token-keyword">def</span> <span class="token-function">dot_attention</span><span class="token-punctuation">(</span>
+    query<span class="token-punctuation">:</span> <span class="token-class">jax.Array</span><span class="token-punctuation">,</span> 
+    key<span class="token-punctuation">:</span> <span class="token-class">jax.Array</span><span class="token-punctuation">,</span> 
+    value<span class="token-punctuation">:</span> <span class="token-class">jax.Array</span><span class="token-punctuation">,</span> 
+    atten_mask<span class="token-punctuation">:</span> <span class="token-class">Optional</span><span class="token-punctuation">[</span><span class="token-class">jax.Array</span><span class="token-punctuation">]</span> <span class="token-operator">=</span> <span class="token-keyword">None</span>
+<span class="token-punctuation">)</span> <span class="token-operator">-></span> <span class="token-class">tuple</span><span class="token-punctuation">[</span><span class="token-class">jax.Array</span><span class="token-punctuation">,</span> <span class="token-class">jax.Array</span><span class="token-punctuation">]</span><span class="token-punctuation">:</span>
+    <span class="token-string">"""Calculate the attention weights.
     
     Args: Using the notation b = batch_size, n = num_heads, s = sequence length 
        of key and value, t = sequence length of query, h = dimension of heads, 
@@ -191,33 +199,33 @@ def dot_attention(
     Returns: 
        output with shape [b, n, t, h] 
        attention_weights with shape [b, n, t, s]
-    """
-    b, n, s, h = key.shape
-    t = query.shape[2]
+    """</span>
+    b<span class="token-punctuation">,</span> n<span class="token-punctuation">,</span> s<span class="token-punctuation">,</span> h <span class="token-operator">=</span> key<span class="token-punctuation">.</span>shape
+    t <span class="token-operator">=</span> query<span class="token-punctuation">.</span>shape<span class="token-punctuation">[</span><span class="token-number">2</span><span class="token-punctuation">]</span>
     
-    # (Assuming a helper function 'assert_has_shape' exists for clarity)
-    assert_has_shape(value, [b, n, s, h]) 
-    assert_has_shape(query, [b, n, t, h]) 
+    <span class="token-comment"># (Assuming a helper function 'assert_has_shape' exists for clarity)</span>
+    <span class="token-function">assert_has_shape</span><span class="token-punctuation">(</span>value<span class="token-punctuation">,</span> <span class="token-punctuation">[</span>b<span class="token-punctuation">,</span> n<span class="token-punctuation">,</span> s<span class="token-punctuation">,</span> h<span class="token-punctuation">]</span><span class="token-punctuation">)</span> 
+    <span class="token-function">assert_has_shape</span><span class="token-punctuation">(</span>query<span class="token-punctuation">,</span> <span class="token-punctuation">[</span>b<span class="token-punctuation">,</span> n<span class="token-punctuation">,</span> t<span class="token-punctuation">,</span> h<span class="token-punctuation">]</span><span class="token-punctuation">)</span> 
 
-    # 1. Dot product of Query and Key to get raw scores (logits)
-    logits = jnp.einsum('BNTH,BNSH->BNTS', query, key)
-    assert_has_shape(logits, [b, n, t, s])
+    <span class="token-comment"># 1. Dot product of Query and Key to get raw scores (logits)</span>
+    logits <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'BNTH,BNSH->BNTS'</span><span class="token-punctuation">,</span> query<span class="token-punctuation">,</span> key<span class="token-punctuation">)</span>
+    <span class="token-function">assert_has_shape</span><span class="token-punctuation">(</span>logits<span class="token-punctuation">,</span> <span class="token-punctuation">[</span>b<span class="token-punctuation">,</span> n<span class="token-punctuation">,</span> t<span class="token-punctuation">,</span> s<span class="token-punctuation">]</span><span class="token-punctuation">)</span>
     
-    # 2. Scale the logits
-    scaled_attention_logits = logits / jnp.sqrt(h)
+    <span class="token-comment"># 2. Scale the logits</span>
+    scaled_attention_logits <span class="token-operator">=</span> logits <span class="token-operator">/</span> jnp<span class="token-punctuation">.</span><span class="token-function">sqrt</span><span class="token-punctuation">(</span>h<span class="token-punctuation">)</span>
     
-    # 3. Apply mask (optional)
-    if atten_mask is not None:
-      scaled_attention_logits += atten_mask
+    <span class="token-comment"># 3. Apply mask (optional)</span>
+    <span class="token-keyword">if</span> atten_mask <span class="token-keyword">is</span> <span class="token-keyword">not</span> <span class="token-keyword">None</span><span class="token-punctuation">:</span>
+      scaled_attention_logits <span class="token-operator">+=</span> atten_mask
       
-    # 4. Normalize scores into weights
-    attention_weights = jax.nn.softmax(scaled_attention_logits, axis=-1)
+    <span class="token-comment"># 4. Normalize scores into weights</span>
+    attention_weights <span class="token-operator">=</span> jax<span class="token-punctuation">.</span>nn<span class="token-punctuation">.</span><span class="token-function">softmax</span><span class="token-punctuation">(</span>scaled_attention_logits<span class="token-punctuation">,</span> axis<span class="token-operator">=</span><span class="token-operator">-</span><span class="token-number">1</span><span class="token-punctuation">)</span>
     
-    # 5. Multiply weights by Value to get final output
-    output = jnp.einsum('BNTS,BNSH->BNTH', attention_weights, value)
-    assert_has_shape(output, [b, n, t, h])
+    <span class="token-comment"># 5. Multiply weights by Value to get final output</span>
+    output <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'BNTS,BNSH->BNTH'</span><span class="token-punctuation">,</span> attention_weights<span class="token-punctuation">,</span> value<span class="token-punctuation">)</span>
+    <span class="token-function">assert_has_shape</span><span class="token-punctuation">(</span>output<span class="token-punctuation">,</span> <span class="token-punctuation">[</span>b<span class="token-punctuation">,</span> n<span class="token-punctuation">,</span> t<span class="token-punctuation">,</span> h<span class="token-punctuation">]</span><span class="token-punctuation">)</span>
     
-    return output, attention_weights
+    <span class="token-keyword">return</span> output<span class="token-punctuation">,</span> attention_weights
 </code></pre>
                 </div>
 
@@ -226,7 +234,7 @@ def dot_attention(
                     <div>
                         <h4 class="text-xl font-semibold text-slate-700">Step 1: Calculate Raw Similarity Scores (Logits)</h4>
                         <p class="text-slate-600 mt-2">This is the heart of the "dot-product" part. We use `einsum` to calculate the similarity between every query vector and every key vector.</p>
-                        <div class="code-block mt-2">logits = jnp.einsum('<span class="input-idx">BNTH</span>,<span class="input-idx">BNSH</span>-><span class="output-idx">BNTS</span>', query, key)</div>
+                        <div class="code-block mt-2">logits <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'<span class="input-idx">BNTH</span>,<span class="input-idx">BNSH</span>-><span class="output-idx">BNTS</span>'</span><span class="token-punctuation">,</span> query<span class="token-punctuation">,</span> key<span class="token-punctuation">)</span></div>
                         <ul class="list-disc list-inside text-slate-600 mt-2 space-y-1">
                             <li><span class="font-semibold">Inputs:</span> Query (`BNTH`) and Key (`BNSH`).</li>
                             <li><span class="font-semibold">Operation:</span> `einsum` performs a dot product along the matching head dimension (`H`). `B` (batch) and `N` (heads) are treated as batch dimensions.</li>
@@ -236,22 +244,22 @@ def dot_attention(
                     <div>
                         <h4 class="text-xl font-semibold text-slate-700">Step 2: Scaling the Scores</h4>
                         <p class="text-slate-600 mt-2">This is the "Scaled" part. Dot product scores can become very large, which can destabilize training. To counteract this, we scale them down by the square root of the head dimension (`h`).</p>
-                        <div class="code-block mt-2">scaled_attention_logits = logits / jnp.sqrt(h)</div>
+                        <div class="code-block mt-2">scaled_attention_logits <span class="token-operator">=</span> logits <span class="token-operator">/</span> jnp<span class="token-punctuation">.</span><span class="token-function">sqrt</span><span class="token-punctuation">(</span>h<span class="token-punctuation">)</span></div>
                     </div>
                     <div>
                         <h4 class="text-xl font-semibold text-slate-700">Step 3: Applying the Mask (Optional)</h4>
                         <p class="text-slate-600 mt-2">Masking is crucial for ignoring irrelevant parts of the sequence, such as padding tokens or, in decoders, future tokens (to prevent "cheating"). The mask adds a large negative number to the logits you want to ignore, making their scores effectively zero after the softmax.</p>
-                         <div class="code-block mt-2">if atten_mask is not None: scaled_attention_logits += atten_mask</div>
+                         <div class="code-block mt-2"><span class="token-keyword">if</span> atten_mask <span class="token-keyword">is</span> <span class="token-keyword">not</span> <span class="token-keyword">None</span><span class="token-punctuation">:</span> scaled_attention_logits <span class="token-operator">+=</span> atten_mask</div>
                     </div>
                      <div>
                         <h4 class="text-xl font-semibold text-slate-700">Step 4: Normalizing Scores into Weights</h4>
                         <p class="text-slate-600 mt-2">The softmax function converts the scaled, masked scores into a probability distribution along the key/source sequence length axis (`S`). For each query, the sum of its attention weights across all keys will now equal 1.</p>
-                         <div class="code-block mt-2">attention_weights = jax.nn.softmax(scaled_attention_logits, axis=-1)</div>
+                         <div class="code-block mt-2">attention_weights <span class="token-operator">=</span> jax<span class="token-punctuation">.</span>nn<span class="token-punctuation">.</span><span class="token-function">softmax</span><span class="token-punctuation">(</span>scaled_attention_logits<span class="token-punctuation">,</span> axis<span class="token-operator">=</span><span class="token-operator">-</span><span class="token-number">1</span><span class="token-punctuation">)</span></div>
                     </div>
                      <div>
                         <h4 class="text-xl font-semibold text-slate-700">Step 5: Producing the Final Output</h4>
                         <p class="text-slate-600 mt-2">Finally, we use the attention weights to create a weighted sum of the `value` vectors. This is the second key use of `einsum`.</p>
-                         <div class="code-block mt-2">output = jnp.einsum('<span class="input-idx">BNTS</span>,<span class="input-idx">BNSH</span>-><span class="output-idx">BNTH</span>', attention_weights, value)</div>
+                         <div class="code-block mt-2">output <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'<span class="input-idx">BNTS</span>,<span class="input-idx">BNSH</span>-><span class="output-idx">BNTH</span>'</span><span class="token-punctuation">,</span> attention_weights<span class="token-punctuation">,</span> value<span class="token-punctuation">)</span></div>
                          <ul class="list-disc list-inside text-slate-600 mt-2 space-y-1">
                              <li><span class="font-semibold">Inputs:</span> Attention Weights (`BNTS`) and Value (`BNSH`).</li>
                              <li><span class="font-semibold">Operation:</span> For each query (`T`), this multiplies its attention weights with the corresponding value vectors and sums the results up along the `S` dimension.</li>
@@ -304,13 +312,13 @@ def dot_attention(
             title: "Matrix Transpose",
             einsumString: `'<span class="input-idx">ij</span>' -> '<span class="output-idx">ji</span>'`,
             explanation: "This is the simplest case. We have one input matrix with axes `i` and `j`. By swapping the labels in the output to `ji`, we are telling `einsum` to reorder the axes, effectively transposing the matrix.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-A = jnp.arange(6).reshape((2, 3))
-# A is a 2x3 matrix
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">6</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
+<span class="token-comment"># A is a 2x3 matrix</span>
 
-B = jnp.einsum('ij->ji', A)
-# B will be a 3x2 matrix`,
+B <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'ij->ji'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">)</span>
+<span class="token-comment"># B will be a 3x2 matrix</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -332,13 +340,13 @@ B = jnp.einsum('ij->ji', A)
             title: "Sum Along an Axis",
             einsumString: `'<span class="input-idx">ij</span>' -> '<span class="output-idx">i</span>'`,
             explanation: "Here, the label `j` appears in the input but not the output. This tells `einsum` to sum over the `j` axis. This is equivalent to `A.sum(axis=1)`.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-A = jnp.arange(6).reshape((2, 3))
-# A is a 2x3 matrix
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">6</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
+<span class="token-comment"># A is a 2x3 matrix</span>
 
-B = jnp.einsum('ij->i', A)
-# B will be a vector of size 2 (sums of each row)`,
+B <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'ij->i'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">)</span>
+<span class="token-comment"># B will be a vector of size 2 (sums of each row)</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -366,13 +374,13 @@ B = jnp.einsum('ij->i', A)
             title: "Vector Dot Product",
             einsumString: `'<span class="input-idx">i</span>,<span class="sum-idx">i</span>' -> ''`,
             explanation: "We have two 1D vectors, and the axis `i` is repeated across both inputs. Since `i` does not appear in the output, we multiply the corresponding elements and sum the results, yielding a scalar.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-a = jnp.array([1, 2, 3])
-b = jnp.array([4, 5, 6])
+a <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">array</span><span class="token-punctuation">(</span><span class="token-punctuation">[</span><span class="token-number">1</span><span class="token-punctuation">,</span> <span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">]</span><span class="token-punctuation">)</span>
+b <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">array</span><span class="token-punctuation">(</span><span class="token-punctuation">[</span><span class="token-number">4</span><span class="token-punctuation">,</span> <span class="token-number">5</span><span class="token-punctuation">,</span> <span class="token-number">6</span><span class="token-punctuation">]</span><span class="token-punctuation">)</span>
 
-s = jnp.einsum('i,i->', a, b)
-# s will be a scalar: (1*4 + 2*5 + 3*6) = 32`,
+s <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'i,i->'</span><span class="token-punctuation">,</span> a<span class="token-punctuation">,</span> b<span class="token-punctuation">)</span>
+<span class="token-comment"># s will be a scalar: (1*4 + 2*5 + 3*6) = 32</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -400,13 +408,13 @@ s = jnp.einsum('i,i->', a, b)
             title: "Matrix Multiplication",
             einsumString: `'<span class="input-idx">i</span><span class="sum-idx">j</span>,<span class="sum-idx">j</span><span class="input-idx">k</span>' -> '<span class="output-idx">ik</span>'`,
             explanation: "The classic example! The common axis `j` is summed over (contracted). The remaining axes `i` from the first matrix and `k` from the second form the output matrix.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-A = jnp.arange(6).reshape((2, 3))  # 2x3 matrix
-B = jnp.arange(12).reshape((3, 4)) # 3x4 matrix
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">6</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>  <span class="token-comment"># 2x3 matrix</span>
+B <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">12</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">3</span><span class="token-punctuation">,</span> <span class="token-number">4</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span> <span class="token-comment"># 3x4 matrix</span>
 
-C = jnp.einsum('ij,jk->ik', A, B)
-# C will be a 2x4 matrix`,
+C <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'ij,jk->ik'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">,</span> B<span class="token-punctuation">)</span>
+<span class="token-comment"># C will be a 2x4 matrix</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -434,13 +442,13 @@ C = jnp.einsum('ij,jk->ik', A, B)
             title: "Hadamard Product (Element-wise)",
             einsumString: `'<span class="input-idx">ij</span>,<span class="input-idx">ij</span>' -> '<span class="output-idx">ij</span>'`,
             explanation: "This is element-wise multiplication. Because the input and output labels are identical for both arrays (`ij`), `einsum` simply multiplies elements at the same position. No axes are summed.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-A = jnp.arange(6).reshape((2, 3))
-B = jnp.arange(6, 12).reshape((2, 3))
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">6</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
+B <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">arange</span><span class="token-punctuation">(</span><span class="token-number">6</span><span class="token-punctuation">,</span> <span class="token-number">12</span><span class="token-punctuation">)</span><span class="token-punctuation">.</span><span class="token-function">reshape</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
 
-C = jnp.einsum('ij,ij->ij', A, B)
-# Equivalent to C = A * B`,
+C <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'ij,ij->ij'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">,</span> B<span class="token-punctuation">)</span>
+<span class="token-comment"># Equivalent to C = A * B</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -468,13 +476,13 @@ C = jnp.einsum('ij,ij->ij', A, B)
             title: "Outer Product",
             einsumString: `'<span class="input-idx">i</span>,<span class="input-idx">j</span>' -> '<span class="output-idx">ij</span>'`,
             explanation: "The outer product of two vectors. Since the input labels (`i` and `j`) are different and both appear in the output, `einsum` multiplies every element of the first vector by every element of the second, creating a matrix.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-a = jnp.array([1, 2, 3])
-b = jnp.array([4, 5])
+a <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">array</span><span class="token-punctuation">(</span><span class="token-punctuation">[</span><span class="token-number">1</span><span class="token-punctuation">,</span> <span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">]</span><span class="token-punctuation">)</span>
+b <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">array</span><span class="token-punctuation">(</span><span class="token-punctuation">[</span><span class="token-number">4</span><span class="token-punctuation">,</span> <span class="token-number">5</span><span class="token-punctuation">]</span><span class="token-punctuation">)</span>
 
-C = jnp.einsum('i,j->ij', a, b)
-# C will be a 3x2 matrix`,
+C <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'i,j->ij'</span><span class="token-punctuation">,</span> a<span class="token-punctuation">,</span> b<span class="token-punctuation">)</span>
+<span class="token-comment"># C will be a 3x2 matrix</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -502,12 +510,12 @@ C = jnp.einsum('i,j->ij', a, b)
             title: "Matrix Trace",
             einsumString: `'<span class="sum-idx">ii</span>' -> ''`,
             explanation: "The trace is the sum of the diagonal elements of a matrix. By repeating the index `i` for a single input (`ii`), we select the diagonal elements. Since `i` does not appear in the output, these elements are summed.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-A = jnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">array</span><span class="token-punctuation">(</span><span class="token-punctuation">[</span><span class="token-punctuation">[</span><span class="token-number">1</span><span class="token-punctuation">,</span> <span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">]</span><span class="token-punctuation">,</span> <span class="token-punctuation">[</span><span class="token-number">4</span><span class="token-punctuation">,</span> <span class="token-number">5</span><span class="token-punctuation">,</span> <span class="token-number">6</span><span class="token-punctuation">]</span><span class="token-punctuation">,</span> <span class="token-punctuation">[</span><span class="token-number">7</span><span class="token-punctuation">,</span> <span class="token-number">8</span><span class="token-punctuation">,</span> <span class="token-number">9</span><span class="token-punctuation">]</span><span class="token-punctuation">]</span><span class="token-punctuation">)</span>
 
-t = jnp.einsum('ii->', A)
-# t will be a scalar: 1 + 5 + 9 = 15`,
+t <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'ii->'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">)</span>
+<span class="token-comment"># t will be a scalar: 1 + 5 + 9 = 15</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
@@ -529,15 +537,15 @@ t = jnp.einsum('ii->', A)
             title: "Batch Matrix Multiplication",
             einsumString: `'<span class="input-idx">b</span><span class="input-idx">i</span><span class="sum-idx">j</span>,<span class="input-idx">b</span><span class="sum-idx">j</span><span class="input-idx">k</span>' -> '<span class="output-idx">bik</span>'`,
             explanation: "This is a cornerstone of deep learning. We have a batch of matrices. The `b` axis is the batch dimension. `einsum` is smart enough to see that `b` is present in both inputs and the output, so it performs the matrix multiplication (`ij,jk->ik`) independently for each item in the batch.",
-            code: `import jax.numpy as jnp
+            code: `<span class="token-keyword">import</span> jax.numpy <span class="token-keyword">as</span> jnp
 
-# Batch of 10 matrices, each 2x3
-A = jnp.ones((10, 2, 3))
-# Batch of 10 matrices, each 3x4
-B = jnp.ones((10, 3, 4))
+<span class="token-comment"># Batch of 10 matrices, each 2x3</span>
+A <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">ones</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">10</span><span class="token-punctuation">,</span> <span class="token-number">2</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
+<span class="token-comment"># Batch of 10 matrices, each 3x4</span>
+B <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">ones</span><span class="token-punctuation">(</span><span class="token-punctuation">(</span><span class="token-number">10</span><span class="token-punctuation">,</span> <span class="token-number">3</span><span class="token-punctuation">,</span> <span class="token-number">4</span><span class="token-punctuation">)</span><span class="token-punctuation">)</span>
 
-C = jnp.einsum('bij,bjk->bik', A, B)
-# C will have shape (10, 2, 4)`,
+C <span class="token-operator">=</span> jnp<span class="token-punctuation">.</span><span class="token-function">einsum</span><span class="token-punctuation">(</span><span class="token-string">'bij,bjk->bik'</span><span class="token-punctuation">,</span> A<span class="token-punctuation">,</span> B<span class="token-punctuation">)</span>
+<span class="token-comment"># C will have shape (10, 2, 4)</span>`,
             visualization: () => {
                 let html = `<div class="flex items-center justify-center space-x-4 mb-4">
                     <div class="text-center">
