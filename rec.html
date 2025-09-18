@@ -60,7 +60,7 @@
             margin-top: 0;
         }
         .details-panel.show {
-            max-height: 2500px;
+            max-height: 3500px; /* Increased max-height for the new content */
             padding: 1.5rem 1.5rem;
             margin-top: 1.5rem;
         }
@@ -83,6 +83,21 @@
             .chart-container {
                 height: 300px;
             }
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn-active {
+            background-color: #4682B4;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-btn-inactive {
+            background-color: #E2E8F0; /* slate-200 */
+            color: #475569; /* slate-600 */
+        }
+        .tab-btn-inactive:hover {
+            background-color: #CBD5E1; /* slate-300 */
         }
     </style>
 </head>
@@ -375,27 +390,197 @@
                 </div>
                 <div id="dl-comparison-table" class="overflow-x-auto"></div>
             </div>
-            <div class="mt-12 text-center space-x-4">
-                 <button class="details-toggle-btn px-6 py-2 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Deep Dive: Wide & Deep]</button>
-                 <button class="details-toggle-btn px-6 py-2 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Explore the Math]</button>
+            <div class="mt-12 text-center space-x-2 sm:space-x-4 flex flex-wrap justify-center gap-2">
+                 <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Deep Dive: Wide & Deep]</button>
+                 <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Deep Dive: DeepFM]</button>
+                 <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Other Innovations (NFM & DCN)]</button>
+                 <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Explore Core Math]</button>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
-                <h4 class="pt-4 text-slate-800">Deep Dive: The Wide & Deep Model</h4>
-                <p>The model combines two approaches: <strong>memorization</strong> and <strong>generalization</strong>.</p>
-                <ul>
-                    <li><strong>The "Wide" Component (Memorization):</strong> A linear model that memorizes direct, frequent rules from the data (e.g., "users who buy chips also buy salsa").</li>
-                    <li><strong>The "Deep" Component (Generalization):</strong> A neural network that finds subtle, hidden patterns and can recommend novel items by understanding their abstract qualities.</li>
-                </ul>
-                <p>Wide & Deep is a workhorse for large-scale **ranking** tasks like Click-Through Rate (CTR) Prediction. Its success relies on smart feature engineering for the "Wide" part and the critical concept of **Joint Training**, where both parts are trained end-to-end on the same goal, allowing them to complement each other.</p>
+                <h4 class="pt-4 text-slate-800">Deep Dive: The Detective Duo (Wide & Deep)</h4>
+            
+                <h5 class="text-slate-700">The Motivation: Why Epoch 2 (GBDTs) Wasn't Enough</h5>
+                <p class="text-lg text-slate-600">The "Portrait by Committee" model (GBDT) is brilliant, but it has a fatal flaw: <strong>it can only learn rules about things it has already seen.</strong> This creates two massive problems:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                        <strong class="text-red-700">1. The Sparsity Problem:</strong> Your data is "sparse." Out of millions of items, a user has only seen 50. A GBDT has no way to build rules for the 99.9% of items the user has <em>never</em> seen. It can't answer: "This user likes Movie A and Movie C... but has never seen Movie X. Will they like it?"
+                    </div>
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                        <strong class="text-red-700">2. The Cold Start Problem:</strong> A brand-new movie is added. It has zero interactions. Since no training data includes it, the GBDT model has no rules for it. It's invisible and cannot be recommended.
+                    </div>
+                </div>
+                <p class="text-lg text-slate-600">GBDTs are masters of <strong>Memorization</strong> but failures at <strong>Generalization</strong>. The industry needed a model that could do <strong>BOTH.</strong></p>
+    
+                <h5 class="text-slate-700">The Mechanism: The "Detective Duo"</h5>
+                <p>Google's <strong>Wide & Deep</strong> model was the first to formally combine both ideas in one single model, like two detectives solving a case.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8 not-prose"> <!-- Using "not-prose" to control styling manually -->
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-4xl">📝</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">The "Wide" Detective</h5>
+                                <p class="text-sm text-sky-600 font-semibold m-0">MEMORIZATION</p>
+                            </div>
+                        </div>
+                        <div class="prose prose-sm prose-slate mt-4">
+                            <p>This is the "beat cop" who knows the obvious rules from experience. It's just the simple <strong>Logistic Regression Scorecard</strong> from Epoch 1.</p>
+                            <ul>
+                                <li><strong>What it Learns:</strong> Simple, countable, co-occurrence rules.</li>
+                                <li><strong>Example Rule:</strong> <code>AND(user='female', category='cosmetics')</code>.</li>
+                                <li><strong>Its Job:</strong> To provide powerful, "no-brainer" recommendations and ensure relevance.</li>
+                                <li class="text-red-600"><strong>WEAKNESS:</strong> Relies entirely on <strong>manual feature engineering</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                         <div class="flex items-center space-x-3">
+                            <span class="text-4xl">🧠</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">The "Deep" Detective</h5>
+                                <p class="text-sm text-amber-600 font-semibold m-0">GENERALIZATION</p>
+                            </div>
+                        </div>
+                         <div class="prose prose-sm prose-slate mt-4">
+                            <p>This is the "profiler" who finds hidden patterns using <strong>Embeddings</strong>. This is the revolution that solves the sparsity problem.</p>
+                            <p>Instead of an item ID, the model learns a "numerical fingerprint" (a vector) for every item in a "concept space."</p>
+                            <p><strong>This is the magic:</strong> The network recommends <code>Item C</code> to a user who likes <code>Item A</code> because their vectors are conceptually close, <strong>even if no one in history has ever interacted with both.</strong></p>
+                        </div>
+                    </div>
+                </div> 
+
+                <h5 class="text-slate-700">Conclusion: Joint Training</h5>
+                <p>The final prediction is (Score from Wide) + (Score from Deep). Both paths are trained <strong>at the same time</strong> from the same error signal. This is critical: the Wide path learns the obvious rules, freeing the Deep path to focus its power on finding the subtle, hidden patterns that the Wide path gets wrong.</p>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
-                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: Wide & Deep and DeepFM</h4>
-                 <h5 class="text-slate-700">Wide & Deep Architecture</h5>
-                 <p>The final prediction combines a "wide" linear part and a "deep" neural network part:</p>
-                 \[P(Y=1|x) = \sigma(w_{wide}^T \phi(x) + w_{deep}^T a^{(L)} + b)\]
-                 <h5 class="text-slate-700">DeepFM's Factorization Machine (FM) Component</h5>
-                 <p>DeepFM replaces the wide part with a Factorization Machine, which automates interaction learning. It learns a latent vector \(\mathbf{v}_i\) for each feature, and the interaction weight is their efficient dot product \(\langle \mathbf{v}_i, \mathbf{v}_j \rangle\).</p>
-                 \[\hat{y}_{FM}(x) = w_0 + \sum_{i=1}^{n} w_i x_i + \sum_{i=1}^{n} \sum_{j=i+1}^{n} \langle \mathbf{v}_i, \mathbf{v}_j \rangle x_i x_j\]
+                <h4 class="pt-4 text-slate-800">Deep Dive: DeepFM's Elegant Solution</h4>
+                <p class="text-lg text-slate-600">DeepFM is the direct and elegant solution to Wide & Deep's biggest weakness. It achieves both memorization and generalization *without any manual feature engineering.*</p>
+
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded my-4">
+                    <strong class="text-red-700">The Weakness of Wide & Deep</strong>
+                    <p class="text-sm">The "Wide" component was powerful but *dumb*. It completely relied on engineers to manually create cross-features like <code>AND(gender, category)</code>. This is slow, requires domain expertise, and it's impossible to guess all the millions of useful combinations.</p>
+                </div>
+
+                <h5 class="text-slate-700">DeepFM's Solution: The Automatic Networker</h5>
+                <p>DeepFM brilliantly solves this by replacing the dumb "Wide" part with an automatic component: a <strong>Factorization Machine (FM)</strong>.</p>
+                <p>Here's how it works:</p>
+                <ol>
+                    <li>Instead of manual feature crosses, the FM learns an <strong>embedding vector (a "fingerprint") for every single feature.</strong></li>
+                    <li>It then *automatically* calculates the interaction strength for **every possible pair of features** simply by calculating the <strong>dot product</strong> of their vectors. (A dot product just measures if two vectors are "aligned" or conceptually similar).</li>
+                    <li>This gives DeepFM massive advantages over Wide & Deep.</li>
+                </ol>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8 not-prose">
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-4xl">🤖</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">The FM Component</h5>
+                                <p class="text-sm text-sky-600 font-semibold m-0">AUTOMATED MEMORIZATION</p>
+                            </div>
+                        </div>
+                        <div class="prose prose-sm prose-slate mt-4">
+                            <p>This component learns all 2-way interactions automatically, completely replacing the manual "Wide" part. It can calculate an interaction score for <code>User=Bob</code> and <code>Item=NewShoe</code> *even if they've never met*, just by comparing their embedding vectors.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                         <div class="flex items-center space-x-3">
+                            <span class="text-4xl">🧠</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">The Deep Component</h5>
+                                <p class="text-sm text-amber-600 font-semibold m-0">GENERALIZATION</p>
+                            </div>
+                        </div>
+                         <div class="prose prose-sm prose-slate mt-4">
+                            <p>This is the same neural network profiler as before. It takes the feature embeddings and feeds them through multiple layers to learn complex, high-order patterns that are more abstract than simple pairs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-slate-700">The "Aha!" Moment: Embedding Sharing</h5>
+                <p>This is the true brilliance of DeepFM. The "Deep" part needs embeddings, and the "FM" part also needs embeddings. DeepFM makes them <strong>share the exact same set of embeddings</strong>. This means one set of "fingerprints" is trained to be good at two jobs at once (specific 2-way interactions AND abstract high-order patterns), leading to much faster, more efficient, and richer learning.</p>
+
+            </div>
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+                <h4 class="pt-4 text-slate-800">Deep Dive: Other Innovations (NFM & DCN)</h4>
+                <p>NFM and DCN try to solve the same problem as DeepFM: <strong>"What is the *best* way to model feature interactions?"</strong></p>
+
+                <h5 class="text-slate-700">1. NFM (Neural Factorization Machine)</h5>
+                <p>NFM argues that just adding the scores from the two detectives (FM + Deep) isn't the best way. Instead, it builds a single "super-profiler."</p>
+                <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm my-4 not-prose">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-4xl">🧩</span>
+                        <div>
+                            <h5 class="font-bold text-slate-800 text-xl m-0">The NFM Idea: "Interactions-First"</h5>
+                        </div>
+                    </div>
+                    <div class="prose prose-sm prose-slate mt-4">
+                        <p>Instead of two parallel paths, NFM is a *stack*:</p>
+                        <ol>
+                            <li><strong>Get Embeddings:</strong> Get the "fingerprint" for every feature (User A, Item B, etc.).</li>
+                            <li><strong>"Bi-Interaction Layer" (The Trick):</strong> Instead of a dot product, it combines every pair of vectors using element-wise multiplication. This creates a *new vector* representing the complex interaction.</li>
+                            <li><strong>Sum & Feed:</strong> It sums all these new "interaction vectors" into one master-vector, which is then fed into a standard DNN.</li>
+                        </ol>
+                        <p><strong>The difference:</strong> DeepFM feeds *raw embeddings* to its DNN. NFM feeds a *summary of all pairwise interactions* to its DNN. It's a single, powerful profiler that first gathers all the 2-way clues and then thinks deeply about the bundle of clues as a whole.</p>
+                    </div>
+                </div>
+
+                <h5 class="text-slate-700">2. DCN (Deep & Cross Network)</h5>
+                <p>DCN worries that the Deep part learns high-order interactions (like <code>User+Item+Time</code>) "implicitly" inside a black box. DCN wants to learn them *explicitly* and *guarantee* that they are learned.</p>
+
+                <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm my-4 not-prose">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-4xl">🔗</span>
+                        <div>
+                            <h5 class="font-bold text-slate-800 text-xl m-0">The DCN Idea: The "Cross Network"</h5>
+                        </div>
+                    </div>
+                     <div class="prose prose-sm prose-slate mt-4">
+                        <p>DCN runs two parallel networks (like Wide & Deep):</p>
+                         <ul>
+                            <li><strong>The Deep Network:</strong> The same DNN profiler as before, finding hidden, *implicit* patterns.</li>
+                            <li><strong>The Cross Network (The Trick):</strong> This new component replaces the "Wide" part. It's a stack of special layers, where each layer *explicitly creates the next level of interactions.*</li>
+                         </ul>
+                         <ol>
+                            <li><strong>Layer 1:</strong> Explicitly learns all the best <strong>2nd-order</strong> interactions.</li>
+                            <li><strong>Layer 2:</strong> Takes Layer 1's output and crosses it with the original input to explicitly learn the best <strong>3rd-order</strong> interactions.</li>
+                            <li><strong>Layer 3:</strong> Does the same to get the best <strong>4th-order</strong> interactions, and so on.</li>
+                         </ol>
+                        <p><strong>The result:</strong> DCN is the ultimate "Detective Duo." It has the standard profiler (Deep) PLUS a systematic analyst (Cross) who exhaustively calculates every high-order combinatorial clue, ensuring no explicit pattern is missed.</p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: From Wide & Deep to DeepFM</h4>
+                 
+                 <h5 class="text-slate-700">1. Wide & Deep Architecture</h5>
+                 <p>The final prediction combines a "wide" linear part and a "deep" neural network part. The model is the sum of these two components, passed through a sigmoid function:</p>
+                 \[ y_{W\&D} = \sigma \left( y_{Wide} + y_{Deep} \right) \]
+                 
+                 <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded my-4">
+                    <strong class="text-amber-800">The Problem: The "Wide" Component</strong>
+                    <p class="text-sm">The "wide" part is a linear model on manually crossed features \(\phi(x)\):</p>
+                    \[ y_{Wide} = w_{wide}^T \phi(x) + b \]
+                    <p class="text-sm mt-2">The problem is the term \(\phi(x)\). This requires an engineer to manually guess all important interactions (like <code>AND(gender, category)</code>). This is slow, incomplete, and doesn't work for unseen feature pairs.</p>
+                 </div>
+
+                 <h5 class="text-slate-700">2. The Solution: DeepFM's Architecture</h5>
+                 <p>DeepFM replaces the inefficient manual "Wide" component with a sophisticated, automatic component: a <strong>Factorization Machine (FM)</strong>. The model is still a sum of two parts:</p>
+                 \[ y_{DeepFM} = \sigma \left( y_{FM} + y_{Deep} \right) \]
+                 
+                 <div class="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded my-4">
+                    <strong class="text-emerald-800">The Automated "Wide" Part: Factorization Machine</strong>
+                     <p class="text-sm">The FM component automatically learns all 1st-order and 2-way feature interactions:</p>
+                    \[ y_{FM} = \sum_{i=1}^{n} w_i x_i + \sum_{i=1}^{n} \sum_{j=i+1}^{n} \langle \mathbf{v}_i, \mathbf{v}_j \rangle x_i x_j \]
+                    <p class="text-sm mt-2">Instead of learning a separate weight for every pair, it learns a single latent vector \(\mathbf{v}_i\) for each feature. The interaction weight is just the dot product \(\langle \mathbf{v}_i, \mathbf{v}_j \rangle\). This can compute interaction strength even for pairs that have never appeared together in the training data.</p>
+                 </div>
+                 
+                 <h5 class="text-slate-700">3. The "Aha!" Moment: Embedding Sharing</h5>
+                 <p>The true elegance of DeepFM is that the latent vectors \(\mathbf{v}\) used in the FM component are the <strong>exact same embedding vectors</strong> that are concatenated and used as the input layer for the "Deep" component. This binds the two parts of the model together, making it incredibly parameter-efficient and allowing both the memorization (FM) and generalization (DNN) components to learn from each other during training.</p>
+
             </div>
         </section>
 
@@ -430,14 +615,97 @@
                     </ul>
                 </div>
             </div>
-             <div class="mt-12 text-center">
-                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Explore the Math]</button>
+             <div class="mt-12 text-center space-x-2 sm:space-x-4 flex flex-wrap justify-center gap-2">
+                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: VAE (Math)]</button>
+                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: LLMs & Diffusion]</button>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: VAEs</h4>
                 <p>A VAE learns a compressed latent representation \(\mathbf{z}_u\) for each user. Instead of maximizing the intractable log-likelihood of the data, it maximizes the <strong>Evidence Lower Bound (ELBO)</strong>, \(\mathcal{L}\):</p>
                 \[\mathcal{L} = \mathbb{E}_{q(\mathbf{z}_u|\mathbf{r}_u)}[\log p(\mathbf{r}_u|\mathbf{z}_u)] - D_{KL}(q(\mathbf{z}_u|\mathbf{r}_u) || p(\mathbf{z}_u))\]
                 <p>This objective has two terms: a <strong>Reconstruction Loss</strong> that ensures the model can rebuild the original user data from the compressed representation, and a <strong>KL Divergence</strong> that regularizes the latent space to help with generalization.</p>
+            </div>
+            <div class="details-panel bg-slate-50/50 rounded-lg">
+                <div class="border-b border-slate-300">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button id="llm-tab-btn" class="tab-btn-active tab-btn whitespace-nowrap py-3 px-5 rounded-t-lg font-semibold text-sm">
+                          Large Language Models
+                        </button>
+                        <button id="diffusion-tab-btn" class="tab-btn-inactive tab-btn whitespace-nowrap py-3 px-5 rounded-t-lg font-semibold text-sm">
+                          Diffusion Models
+                        </button>
+                    </nav>
+                </div>
+                
+                <div id="llm-tab-panel" class="py-6 prose max-w-none">
+                    <h4 class="text-slate-800">Frontier 1: Large Language Models (LLMs) as the Recommender</h4>
+                    <p>This is the dominant trend, treating recommendation as a natural language problem. A user's history is not a list of IDs; it's a *story*. The model's job is to *read the story and write the next chapter.*</p>
+                    
+                    <h5 class="text-slate-700">Full Model Paradigms</h5>
+                    <h6>Technical Mechanism 1: Autoregressive Sequential Generation</h6>
+                    <ul>
+                        <li><strong>How it Works:</strong> All item IDs (e.g., "Blade Runner" = token <code>5021</code>) are added to the LLM's vocabulary, just like words.</li>
+                        <li><strong>The Task:</strong> The model is given a user's history as a prompt (`[START], 5021, 8810, ...`) and its only job is to predict the *next* token—the next item the user actually interacted with.</li>
+                        <li><strong>Recommendation:</strong> You feed the model the user's history and ask it to generate the next 20 tokens. These tokens *are* the recommendations.</li>
+                    </ul>
+
+                    <h6>Technical Mechanism 2: Prompt-Based Unified Models (e.g., P5)</h6>
+                    <p>A single, massive LLM is pre-trained on a "buffet" of all possible recommendation tasks by converting them into text prompts. This single model can perform dozens of different tasks just by changing the prompt:</p>
+                    <div class="overflow-x-auto my-4">
+                        <table class="w-full text-sm text-left shadow-sm rounded-lg">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="p-3 font-semibold text-slate-700">Task</th>
+                                    <th class="p-3 font-semibold text-slate-700">Example Prompt</th>
+                                    <th class="p-3 font-semibold text-slate-700">Example Model Generation</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                                <tr class="border-b">
+                                    <td class="p-3 font-medium">Rating Prediction</td>
+                                    <td class="p-3 font-mono text-xs">"How would User_123 rate Item_456?"</td>
+                                    <td class="p-3 font-mono text-xs text-blue-600">"5 stars"</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3 font-medium">Next-Item Rec</td>
+                                    <td class="p-3 font-mono text-xs">"History: [item A, item B]. What's next?"</td>
+                                    <td class="p-3 font-mono text-xs text-blue-600">"Item C"</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-medium">Explanation</td>
+                                    <td class="p-3 font-mono text-xs">"Why recommend 'Cyberpunk' to a 'Blade Runner' fan?"</td>
+                                    <td class="p-3 font-mono text-xs text-blue-600">"Both share a dark, dystopian theme..."</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h5 class="text-slate-700">The Practical Production Strategy</h5>
+                    <h6>Technical Mechanism 3: The Hybrid Approach (LLM as a Re-Ranker)</h6>
+                    <p>This is the most practical state-of-the-art method in production. Running an LLM over millions of items is too slow. Instead, a multi-stage funnel is used:</p>
+                    <ol class="list-decimal pl-5">
+                        <li><strong>Stage 1 (Retrieval):</strong> A simple, fast model grabs 1,000 "good enough" candidates.</li>
+                        <li><strong>Stage 2 (Ranking):</strong> A powerful model like DeepFM (Epoch 3) ranks those 1,000 and narrows them to the Top 100.</li>
+                        <li><strong>Stage 3 (Generative Re-Ranking):</strong> The Top 100 items, plus rich user context, are fed as a complex prompt to an LLM. Its job is to apply its deep reasoning to <strong>generate the final, optimal ordering</strong> of just those 100 items.</li>
+                    </ol>
+                </div>
+                
+                <div id="diffusion-tab-panel" class="py-6 prose max-w-none hidden">
+                     <h4 class="text-slate-800">Frontier 2: Diffusion Models for Recommendation</h4>
+                    <p>This is a newer, highly novel approach from image generation. The idea is that you can start with pure static (random noise) and gradually "denoise" it, guided by the user's context, until a clear recommendation profile emerges.</p>
+                    <h5 class="text-slate-700">Technical Mechanism: Denoising Diffusion Process</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="bg-sky-50 border-l-4 border-sky-400 p-4 rounded">
+                            <strong class="text-sky-800">1. Forward Process (Training) ➡️</strong>
+                            <p class="text-sm">The model learns how a "perfect" user preference vector (e.g., <code>[1, 0, 1, 1...]</code>) slowly "decays" into pure random noise over 50 steps by repeatedly adding a little bit of noise.</p>
+                        </div>
+                        <div class="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded">
+                            <strong class="text-emerald-800">2. Reverse Process (Recommendation) ⬅️</strong>
+                            <p class="text-sm">To recommend, you start with pure noise. You use a neural network (guided by the user's ID) to "denoise" the vector step-by-step, predicting and removing the noise until a crystal clear preference profile emerges from the static.</p>
+                        </div>
+                    </div>
+                    <p>The final, fully "denoised" vector is the model's generated prediction of the user's complete preference list for all items.</p>
+                </div>
             </div>
         </section>
 
@@ -689,6 +957,33 @@
                 });
             };
             
+            const initEpoch4Tabs = () => {
+                const llmTabBtn = document.getElementById('llm-tab-btn');
+                const diffusionTabBtn = document.getElementById('diffusion-tab-btn');
+                const llmPanel = document.getElementById('llm-tab-panel');
+                const diffusionPanel = document.getElementById('diffusion-tab-panel');
+                
+                if (!llmTabBtn || !diffusionTabBtn || !llmPanel || !diffusionPanel) return;
+
+                llmTabBtn.addEventListener('click', () => {
+                    llmPanel.classList.remove('hidden');
+                    diffusionPanel.classList.add('hidden');
+                    llmTabBtn.classList.add('tab-btn-active');
+                    llmTabBtn.classList.remove('tab-btn-inactive');
+                    diffusionTabBtn.classList.add('tab-btn-inactive');
+                    diffusionTabBtn.classList.remove('tab-btn-active');
+                });
+
+                diffusionTabBtn.addEventListener('click', () => {
+                    diffusionPanel.classList.remove('hidden');
+                    llmPanel.classList.add('hidden');
+                    diffusionTabBtn.classList.add('tab-btn-active');
+                    diffusionTabBtn.classList.remove('tab-btn-inactive');
+                    llmTabBtn.classList.add('tab-btn-inactive');
+                    llmTabBtn.classList.remove('tab-btn-active');
+                });
+            };
+
             const initKatex = () => {
                 if (typeof renderMathInElement !== 'undefined') {
                     renderMathInElement(document.body, {
@@ -709,6 +1004,7 @@
             smoothScrollNav();
             activeNavHighlighter();
             detailsToggles();
+            initEpoch4Tabs();
             initKatex();
         });
     </script>
