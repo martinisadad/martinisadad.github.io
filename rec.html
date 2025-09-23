@@ -616,14 +616,8 @@
                 </div>
             </div>
              <div class="mt-12 text-center space-x-2 sm:space-x-4 flex flex-wrap justify-center gap-2">
-                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: VAE (Math)]</button>
                  <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: LLMs & Diffusion]</button>
-            </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
-                <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: VAEs</h4>
-                <p>A VAE learns a compressed latent representation \(\mathbf{z}_u\) for each user. Instead of maximizing the intractable log-likelihood of the data, it maximizes the <strong>Evidence Lower Bound (ELBO)</strong>, \(\mathcal{L}\):</p>
-                \[\mathcal{L} = \mathbb{E}_{q(\mathbf{z}_u|\mathbf{r}_u)}[\log p(\mathbf{r}_u|\mathbf{z}_u)] - D_{KL}(q(\mathbf{z}_u|\mathbf{r}_u) || p(\mathbf{z}_u))\]
-                <p>This objective has two terms: a <strong>Reconstruction Loss</strong> that ensures the model can rebuild the original user data from the compressed representation, and a <strong>KL Divergence</strong> that regularizes the latent space to help with generalization.</p>
+                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Explore Generative Math]</button>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg">
                 <div class="border-b border-slate-300">
@@ -706,6 +700,31 @@
                     </div>
                     <p>The final, fully "denoised" vector is the model's generated prediction of the user's complete preference list for all items.</p>
                 </div>
+            </div>
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+                <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: Generative Architectures</h4>
+                
+                <h5 class="text-slate-700">1. VAEs (The Classic Approach)</h5>
+                <p>A VAE learns a compressed latent representation \(\mathbf{z}_u\) for each user. Its objective is the <strong>Evidence Lower Bound (ELBO)</strong>, \(\mathcal{L}\), which it tries to maximize:</p>
+                \[\mathcal{L} = \mathbb{E}_{q(\mathbf{z}_u|\mathbf{r}_u)}[\log p(\mathbf{r}_u|\mathbf{z}_u)] - D_{KL}(q(\mathbf{z}_u|\mathbf{r}_u) || p(\mathbf{z}_u))\]
+                <p>This formula consists of two key parts: a <strong>Reconstruction Loss</strong> (the first term), which forces the model to accurately rebuild the original user data, and a <strong>KL Divergence</strong> (the second term), which regularizes the latent space to help with generalization.</p>
+                <hr class="my-6">
+                
+                <h5 class="text-slate-700">2. LLMs (Transformer Math)</h5>
+                <p>LLMs model recommendation as a sequential, "next token prediction" task. The core mechanism enabling this is <strong>Self-Attention</strong>, which lets every item in a user's history "talk" to every other item to build context.</p>
+                <p>Attention calculates a score using three learned vectors for each item: a <strong>Query (Q)</strong>, a <strong>Key (K)</strong>, and a <strong>Value (V)</strong>. The formula is:</p>
+                \[ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V \]
+                <p>The model's training objective is then to simply minimize the <strong>Cross-Entropy Loss</strong> (or Negative Log-Likelihood) between the model's predicted probability for the next item and the actual item (\(y_i\)) that the user interacted with.</p>
+                \[ L_{CE} = -\sum_{i=1}^{N} \log P(y_i | \text{history}) \]
+
+                <hr class="my-6">
+
+                <h5 class="text-slate-700">3. Diffusion Models (The Frontier Objective)</h5>
+                <p>Diffusion models are trained with a surprisingly simple goal: **predict the random noise** that was added during the "Forward Process."</p>
+                <p>The model \(\epsilon_\theta\) is a neural network (like a UNet) that is fed the noisy user vector at step \(t\) (which is \(\mathbf{x}_t\)) and the timestep \(t\). Its job is to output a vector that is as close as possible to the *original noise* (\(\epsilon\)) that was added to create this specific version. The training objective is a simple **Mean Squared Error (L2 Loss)** between the *real* noise and the *predicted* noise:</p>
+                \[ L_{simple} = \mathbb{E}_{t, \mathbf{x}_0, \epsilon} \left[ \left\| \epsilon - \epsilon_\theta(\mathbf{x}_t, t) \right\|^2 \right] \]
+                <p>At recommendation time, the model uses this noise-predictor in reverse to "denoise" a random vector step-by-step (guided by user context) until a clean preference vector emerges.</p>
+
             </div>
         </section>
 
