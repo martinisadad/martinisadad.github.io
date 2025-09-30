@@ -22,12 +22,12 @@
         }
         @media (min-width: 1280px) {
             html {
-                font-size: 18px; /* Increased from 17px */
+                font-size: 19px; /* Further increased for large screens */
             }
         }
         @media (min-width: 1920px) {
             html {
-                font-size: 20px; /* Increased from 18px for 16:9 full HD screens */
+                font-size: 22px; /* Further increased for 16:9 full HD screens */
             }
         }
 
@@ -74,7 +74,7 @@
             margin-top: 0;
         }
         .details-panel.show {
-            max-height: 3500px;
+            max-height: 3500px; /* Increased max-height for the new content */
             padding: 1.5rem 1.5rem;
             margin-top: 1.5rem;
         }
@@ -1029,14 +1029,9 @@
                 }
             };
 
-// Ensure all scripts are deferred or inside DOMContentLoaded
-            if (typeof Chart !== 'undefined') {
-                gbdtChart();
-            } else {
-                console.error('Chart.js not loaded, cannot initialize gbdtChart.');
-            }
-            
+            // Initialize all functions
             featureCross();
+            gbdtChart();
             dlModelComparison();
             generativeToggle();
             challenges();
@@ -1044,9 +1039,7 @@
             activeNavHighlighter();
             detailsToggles();
             initEpoch4Tabs();
-            
-            // Defer Katex rendering slightly to ensure all content is loaded
-            setTimeout(initKatex, 100);
+            initKatex();
         });
     </script>
 </body>
