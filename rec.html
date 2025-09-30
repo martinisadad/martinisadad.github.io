@@ -17,6 +17,20 @@
     <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method. 1. Overall Evolution -> Orient -> Interactive Timeline -> Click -> Visual map of report, HTML/CSS/JS. 2. GBDT Frameworks (Table 1) -> Compare -> Interactive Bar Chart -> Button Select -> Dynamic visual comparison is more engaging than a static table, Chart.js. 3. Deep Learning Models (Table 2) -> Compare -> Dynamic Comparison Grid -> Checkbox Select -> Allows direct, user-selected side-by-side comparison of complex architectures, HTML/JS. 4. Generative vs. Discriminative -> Contrast -> Toggled Content Cards -> Button Click -> Focuses user attention on one concept at a time for clear comparison, HTML/CSS/JS. 5. Future Challenges -> Inform -> Clickable Tag Cloud -> Click -> Visually interesting way to present key terms, HTML/JS. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
+        html {
+            font-size: 16px; /* Base font size */
+        }
+        @media (min-width: 1280px) {
+            html {
+                font-size: 17px; /* Increase base font size for large screens */
+            }
+        }
+        @media (min-width: 1920px) {
+            html {
+                font-size: 18px; /* Further increase for 16:9 full HD screens */
+            }
+        }
+
         body {
             font-family: 'Lato', sans-serif;
             background-color: #F1F5F9; /* Light Slate */
@@ -60,7 +74,7 @@
             margin-top: 0;
         }
         .details-panel.show {
-            max-height: 3500px; /* Increased max-height for the new content */
+            max-height: 3500px;
             padding: 1.5rem 1.5rem;
             margin-top: 1.5rem;
         }
@@ -130,7 +144,7 @@
 
         <section id="hero" class="text-center pt-8 pb-20">
             <h2 class="text-4xl md:text-6xl font-bold text-slate-900 mb-6">The Evolution of Recommendation</h2>
-            <p class="max-w-3xl mx-auto text-lg text-slate-600 mb-12">
+            <p class="max-w-3xl mx-auto text-lg lg:text-xl text-slate-600 mb-12">
                 An interactive journey through the algorithmic eras that define modern recommendation systems. Explore the core concepts, compare key architectures, and discover what's next.
             </p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
@@ -163,10 +177,10 @@
             <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#38BDF8] tracking-wider">EPOCH 1</h3>
                 <h2 class="text-4xl font-bold text-slate-900 mt-2">The Foundation: Linear Models</h2>
-                <p class="text-lg text-slate-500 mt-3 max-w-2xl mx-auto">Learning from explicit rules and the art of manual feature engineering.</p>
+                <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">Learning from explicit rules and the art of manual feature engineering.</p>
             </div>
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="prose max-w-none text-slate-600">
+                <div class="prose max-w-none text-slate-600 lg:prose-lg">
                     <p>The initial era of large-scale recommendation was dominated by <strong>Logistic Regression (LR)</strong>. Its simplicity, scalability, and interpretability made it an industrial workhorse. However, its core limitation is linearity—it assumes each feature's contribution is independent.</p>
                     <p>To capture complex relationships (e.g., a user's interest in 'cosmetics' is high only if their gender is 'female'), engineers relied on manual <strong>feature crossing</strong>. This created new features by combining existing ones, but led to a combinatorial explosion of the feature space, making it a difficult and expensive process.</p>
                 </div>
@@ -187,7 +201,7 @@
                  <button class="details-toggle-btn px-6 py-2 bg-sky-100 text-sky-700 font-semibold rounded-full text-sm">[Show Intuitive Example]</button>
                  <button class="details-toggle-btn px-6 py-2 bg-sky-100 text-sky-700 font-semibold rounded-full text-sm">[Explore the Math]</button>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Intuitive Example: The "Will I Like This Movie?" Scorecard</h4>
                 <p>Imagine you have a mental checklist for deciding if you'll like a movie. A linear model works exactly like this, but it learns from data *how many points* to assign to each item. These learned points are the model's <strong>weights</strong>.</p>
                 
@@ -260,7 +274,7 @@
                 <h5 class="text-slate-700">The "Linear" Limitation (Why Epoch 2 was needed)</h5>
                 <p>This simple model can't understand complex interactions. For example, what if you *only* like Adam Sandler in *dramas*, not comedies? The model just adds "+50" for comedy and "-40" for Sandler. It can't learn the "IF...THEN..." rule. To learn this, engineers had to create a manual <strong>cross-feature</strong>, which is exactly what the interactive "Feature Crossing" demo shows. Epoch 2 automated this entire process.</p>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: Logistic Regression</h4>
                 <h5 class="text-slate-700">Hypothesis Function</h5>
                 <p>The model calculates a linear combination of input features \(x\) using weights \(w\) and a bias \(b\).</p>
@@ -277,10 +291,10 @@
              <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#34D399] tracking-wider">EPOCH 2</h3>
                 <h2 class="text-4xl font-bold text-slate-900 mt-2">Automated Interaction Learning</h2>
-                 <p class="text-lg text-slate-500 mt-3 max-w-2xl mx-auto">The rise of Gradient Boosting Decision Trees (GBDTs).</p>
+                 <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">The rise of Gradient Boosting Decision Trees (GBDTs).</p>
             </div>
             
-            <div class="card p-6 md:p-8 rounded-lg mb-12 bg-slate-50/70 prose max-w-none">
+            <div class="card p-6 md:p-8 rounded-lg mb-12 bg-slate-50/70 prose max-w-none lg:prose-lg">
                 <h4 class="font-semibold text-lg text-center text-slate-800">Background: What is the "Tree" in GBDT?</h4>
                 <div class="grid md:grid-cols-2 gap-8 items-start mt-6">
                     <div>
@@ -294,7 +308,7 @@
             </div>
 
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="prose max-w-none text-slate-600 order-2 md:order-1">
+                <div class="prose max-w-none text-slate-600 order-2 md:order-1 lg:prose-lg">
                     <p>GBDTs build a strong model by sequentially adding weak learners (decision trees). This process automatically captures high-order, non-linear feature interactions, leading to specialized frameworks:</p>
                     <ul>
                         <li><strong>XGBoost:</strong> Popularized GBDTs with its focus on regularization and performance.</li>
@@ -319,7 +333,7 @@
                  <button class="details-toggle-btn px-6 py-2 bg-emerald-100 text-emerald-700 font-semibold rounded-full text-sm">[Show Intuitive Example]</button>
                  <button class="details-toggle-btn px-6 py-2 bg-emerald-100 text-emerald-700 font-semibold rounded-full text-sm">[Explore the Math]</button>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Intuitive Example: Portrait by Committee</h4>
                 <p>Imagine your goal is to draw a complex portrait of Abraham Lincoln, but you only have a team of "specialist" artists who can each only draw one simple shape.</p>
                 <h5 class="text-slate-700">The Process:</h5>
@@ -332,7 +346,7 @@
                 <h5 class="text-slate-700">This Is GBDT</h5>
                 <p>This repeats hundreds of times. Your final, accurate portrait is not one drawing, but the <strong>sum of hundreds of tiny, simple correction-drawings</strong> layered on top of each other. Each new tutor (tree) <strong>boosts</strong> the accuracy by correcting the error (the <strong>gradient</strong>) of the team that came before. This process automatically discovers complex interactions (like "a frown line goes *inside* the beard-shape") without a human ever planning it.</p>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: How GBDT *Really* Works</h4>
                 <p>The intuitive "mistake picture" is known mathematically as the <strong>negative gradient of the loss function</strong>. This is the core trick of the algorithm.</p>
                 
@@ -364,7 +378,7 @@
              <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#FBBF24] tracking-wider">EPOCH 3</h3>
                 <h2 class="text-4xl font-bold text-slate-900 mt-2">The Deep Learning Revolution</h2>
-                 <p class="text-lg text-slate-500 mt-3 max-w-2xl mx-auto">Balancing memorization for relevance with generalization for discovery.</p>
+                 <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">Balancing memorization for relevance with generalization for discovery.</p>
             </div>
             
             <div class="card p-6 md:p-8 rounded-lg">
@@ -396,7 +410,7 @@
                  <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Other Innovations (NFM & DCN)]</button>
                  <button class="details-toggle-btn px-4 py-2 sm:px-6 bg-amber-100 text-amber-700 font-semibold rounded-full text-sm">[Explore Core Math]</button>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Deep Dive: The Detective Duo (Wide & Deep)</h4>
             
                 <h5 class="text-slate-700">The Motivation: Why Epoch 2 (GBDTs) Wasn't Enough</h5>
@@ -454,7 +468,7 @@
                 <h5 class="text-slate-700">Conclusion: Joint Training</h5>
                 <p>The final prediction is (Score from Wide) + (Score from Deep). Both paths are trained <strong>at the same time</strong> from the same error signal. This is critical: the Wide path learns the obvious rules, freeing the Deep path to focus its power on finding the subtle, hidden patterns that the Wide path gets wrong.</p>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Deep Dive: DeepFM's Elegant Solution</h4>
                 <p class="text-lg text-slate-600">DeepFM is the direct and elegant solution to Wide & Deep's biggest weakness. It achieves both memorization and generalization *without any manual feature engineering.*</p>
 
@@ -503,7 +517,7 @@
                 <p>This is the true brilliance of DeepFM. The "Deep" part needs embeddings, and the "FM" part also needs embeddings. DeepFM makes them <strong>share the exact same set of embeddings</strong>. This means one set of "fingerprints" is trained to be good at two jobs at once (specific 2-way interactions AND abstract high-order patterns), leading to much faster, more efficient, and richer learning.</p>
 
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Deep Dive: Other Innovations (NFM & DCN)</h4>
                 <p>NFM and DCN try to solve the same problem as DeepFM: <strong>"What is the *best* way to model feature interactions?"</strong></p>
 
@@ -553,7 +567,7 @@
                 </div>
 
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                  <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: From Wide & Deep to DeepFM</h4>
                  
                  <h5 class="text-slate-700">1. Wide & Deep Architecture</h5>
@@ -588,10 +602,10 @@
             <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#F87171] tracking-wider">EPOCH 4</h3>
                 <h2 class="text-4xl font-bold text-slate-900 mt-2">The New Frontier: Generative AI</h2>
-                <p class="text-lg text-slate-500 mt-3 max-w-2xl mx-auto">Shifting from predicting clicks to synthesizing recommendations.</p>
+                <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">Shifting from predicting clicks to synthesizing recommendations.</p>
             </div>
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="prose max-w-none text-slate-600">
+                <div class="prose max-w-none text-slate-600 lg:prose-lg">
                     <p>The latest paradigm shift moves from <strong>discriminative</strong> models (predicting a click from a list) to <strong>generative</strong> models (synthesizing a recommendation from scratch). This redefines the task from ranking candidates to directly generating the ideal item.</p>
                      <div class="flex space-x-4 my-4">
                         <button id="show-disc" class="gen-toggle-btn flex-1 px-4 py-2 bg-[#4682B4] text-white rounded-lg shadow">Discriminative</button>
@@ -606,7 +620,7 @@
                         <p class="text-sm">Learns the underlying data distribution. Answers: "Given this user, generate the ideal item for them."</p>
                     </div>
                 </div>
-                <div class="prose max-w-none text-slate-600">
+                <div class="prose max-w-none text-slate-600 lg:prose-lg">
                     <p>Key generative architectures include:</p>
                      <ul>
                         <li><strong>VAEs (Variational Autoencoders):</strong> Learn a probabilistic latent space of user tastes.</li>
@@ -631,7 +645,7 @@
                     </nav>
                 </div>
                 
-                <div id="llm-tab-panel" class="py-6 prose max-w-none">
+                <div id="llm-tab-panel" class="py-6 prose max-w-none lg:prose-lg">
                     <h4 class="text-slate-800">Frontier 1: Large Language Models (LLMs) as the Recommender</h4>
                     <p>This is the dominant trend, treating recommendation as a natural language problem. A user's history is not a list of IDs; it's a *story*. The model's job is to *read the story and write the next chapter.*</p>
                     
@@ -684,7 +698,7 @@
                     </ol>
                 </div>
                 
-                <div id="diffusion-tab-panel" class="py-6 prose max-w-none hidden">
+                <div id="diffusion-tab-panel" class="py-6 prose max-w-none lg:prose-lg hidden">
                      <h4 class="text-slate-800">Frontier 2: Diffusion Models for Recommendation</h4>
                     <p>This is a newer, highly novel approach from image generation. The idea is that you can start with pure static (random noise) and gradually "denoise" it, guided by the user's context, until a clear recommendation profile emerges.</p>
                     <h5 class="text-slate-700">Technical Mechanism: Denoising Diffusion Process</h5>
@@ -701,7 +715,7 @@
                     <p>The final, fully "denoised" vector is the model's generated prediction of the user's complete preference list for all items.</p>
                 </div>
             </div>
-            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none">
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: Generative Architectures</h4>
                 
                 <h5 class="text-slate-700">1. VAEs (The Classic Approach)</h5>
@@ -732,10 +746,10 @@
             <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#A78BFA] tracking-wider">SYNTHESIS</h3>
                 <h2 class="text-4xl font-bold text-slate-900 mt-2">Future Directions</h2>
-                <p class="text-lg text-slate-500 mt-3 max-w-2xl mx-auto">Cross-cutting challenges and the road ahead.</p>
+                <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">Cross-cutting challenges and the road ahead.</p>
             </div>
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="prose max-w-none text-slate-600">
+                <div class="prose max-w-none text-slate-600 lg:prose-lg">
                     <p>The evolution of recommendation systems shows a clear trend: delegating complex pattern recognition from human engineers to the learning algorithm. While progress has been immense, several challenges persist, and new ones have emerged with the rise of generative AI.</p>
                     <p>The future likely lies in hybrid systems where LLMs act as "reasoning engines" for understanding user intent, while efficient discriminative models handle large-scale ranking. The goal is a shift towards conversational, agentic systems that are not only accurate but also fair, transparent, and trustworthy.</p>
                 </div>
