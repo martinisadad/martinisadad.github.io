@@ -22,12 +22,12 @@
         }
         @media (min-width: 1280px) {
             html {
-                font-size: 17px; /* Increase base font size for large screens */
+                font-size: 18px; /* Increased from 17px */
             }
         }
         @media (min-width: 1920px) {
             html {
-                font-size: 18px; /* Further increase for 16:9 full HD screens */
+                font-size: 20px; /* Increased from 18px for 16:9 full HD screens */
             }
         }
 
@@ -1000,6 +1000,7 @@
 
                 llmTabBtn.addEventListener('click', () => {
                     llmPanel.classList.remove('hidden');
+
                     diffusionPanel.classList.add('hidden');
                     llmTabBtn.classList.add('tab-btn-active');
                     llmTabBtn.classList.remove('tab-btn-inactive');
@@ -1028,9 +1029,14 @@
                 }
             };
 
-            // Initialize all functions
+// Ensure all scripts are deferred or inside DOMContentLoaded
+            if (typeof Chart !== 'undefined') {
+                gbdtChart();
+            } else {
+                console.error('Chart.js not loaded, cannot initialize gbdtChart.');
+            }
+            
             featureCross();
-            gbdtChart();
             dlModelComparison();
             generativeToggle();
             challenges();
@@ -1038,7 +1044,9 @@
             activeNavHighlighter();
             detailsToggles();
             initEpoch4Tabs();
-            initKatex();
+            
+            // Defer Katex rendering slightly to ensure all content is loaded
+            setTimeout(initKatex, 100);
         });
     </script>
 </body>
