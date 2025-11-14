@@ -124,6 +124,7 @@
                 <a href="#epoch-1" class="nav-link border-b-2 border-transparent">Epoch 1</a>
                 <a href="#epoch-2" class="nav-link border-b-2 border-transparent">Epoch 2</a>
                 <a href="#epoch-3" class="nav-link border-b-2 border-transparent">Epoch 3</a>
+                <a href="#retrieval" class="nav-link border-b-2 border-transparent">Retrieval</a>
                 <a href="#epoch-4" class="nav-link border-b-2 border-transparent">Epoch 4</a>
                 <a href="#synthesis" class="nav-link border-b-2 border-transparent">Future</a>
             </div>
@@ -133,6 +134,7 @@
                     <option value="#epoch-1">Epoch 1: Linear Models</option>
                     <option value="#epoch-2">Epoch 2: GBDTs</option>
                     <option value="#epoch-3">Epoch 3: Deep Learning</option>
+                    <option value="#retrieval">Retrieval (Two-Tower)</option>
                     <option value="#epoch-4">Epoch 4: Generative AI</option>
                     <option value="#synthesis">Future Directions</option>
                 </select>
@@ -598,6 +600,83 @@
             </div>
         </section>
 
+        <section id="retrieval" class="scroll-mt-24 bg-white p-8 md:p-12 rounded-xl shadow-lg">
+            <div class="text-center mb-12">
+                <h3 class="text-base font-bold text-[#A78BFA] tracking-wider">BRIDGE</h3>
+                <h2 class="text-4xl font-bold text-slate-900 mt-2">The Retrieval Gatekeeper: The Two-Tower Model</h2>
+                <p class="text-lg lg:text-xl text-slate-500 mt-3 max-w-2xl mx-auto">This architecture revolutionized large-scale industrial systems by solving the challenge of retrieving highly relevant candidates from millions of items in milliseconds.</p>
+            </div>
+            
+            <div class="prose max-w-none text-slate-600 lg:prose-lg mb-8">
+                <p>The **Two-Tower Retrieval Model** is the core component that manages the scale of modern recommendation. It is not a final scoring system; it is the **gatekeeper** that filters the millions of items in the catalogue down to a few hundred top candidates for the ranking models (like DeepFM in Epoch 3 or LLMs in Epoch 4) to process.</p>
+
+                <h5 class="text-slate-700">The Role of the Two-Stage Funnel</h5>
+                <p>Every large-scale recommender uses a funnel to manage computation:</p>
+                <div class="overflow-x-auto my-4">
+                    <table class="w-full text-sm text-left shadow-sm rounded-lg">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-3 font-semibold text-slate-700">Stage</th>
+                                <th class="p-3 font-semibold text-slate-700">Goal</th>
+                                <th class="p-3 font-semibold text-slate-700">Scale / Latency</th>
+                                <th class="p-3 font-semibold text-slate-700">Model Used</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">
+                            <tr class="border-b">
+                                <td class="p-3 font-medium">1. Retrieval</td>
+                                <td class="p-3">Quickly filter **millions** of items to **hundreds** of candidates.</td>
+                                <td class="p-3 text-red-600">Extremely Low Latency (Milliseconds)</td>
+                                <td class="p-3">**Two-Tower Model**</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">2. Ranking</td>
+                                <td class="p-3">Accurately score and order the candidates from Stage 1 to find the **Top 10-20** recommendations.</td>
+                                <td class="p-3 text-green-600">High Accuracy, Higher Latency tolerance</td>
+                                <td class="p-3">DeepFM, LLMs (Re-Rankers)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h5 class="text-slate-700">Mechanism: The Two-Tower Architecture</h5>
+                <p>The model is named for its structure: two independent neural networks (towers) that only meet at the very end.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8 not-prose">
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-4xl">👤</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">Query Tower (User)</h5>
+                            </div>
+                        </div>
+                        <div class="prose prose-sm prose-slate mt-4">
+                            <p>Takes in **user features** (history, demographics, context) and converts them into a single, compact vector (an **embedding**, $Q$).</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border-2 border-slate-200 shadow-sm h-full">
+                         <div class="flex items-center space-x-3">
+                            <span class="text-4xl">📦</span>
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-xl m-0">Candidate Tower (Item)</h5>
+                            </div>
+                        </div>
+                         <div class="prose prose-sm prose-slate mt-4">
+                            <p>Takes in **item features** (title, category, popularity) and converts them into a single, compact vector (an **embedding**, $I$).</p>
+                        </div>
+                    </div>
+                </div> 
+
+                <h5 class="text-slate-700">Interaction and Scalability</h5>
+                <p>The two-tower model achieves speed because the **item embeddings ($I$) are pre-computed offline** and stored in a specialized **Vector Database** (e.g., FAISS). The interaction is then a simple, fast dot product calculation performed live, followed by an efficient approximate nearest neighbor (ANN) search to find the most relevant candidates.</p>
+                <p>The prediction score is the dot product, which measures semantic alignment:</p>
+                \[ \hat{y}(Q, I) = Q \cdot I = \sum_{k=1}^{d} Q_k I_k \]
+
+                <h5 class="text-slate-700">Relationship to Generative AI (Epoch 4)</h5>
+                <p>The two-tower model is the **discriminative** standard for retrieval. The newer **Generative Retrieval** paradigm (discussed in Epoch 4) seeks to replace this architecture entirely. Instead of generating a vector $Q$ and then *searching* a database of $I$ vectors, Generative Retrieval uses LLMs to directly **generate** the item IDs themselves, eliminating the need for the external vector search process and promising even greater efficiency and reasoning capabilities.</p>
+            </div>
+        </section>
+
+
         <section id="epoch-4" class="scroll-mt-24 bg-white p-8 md:p-12 rounded-xl shadow-lg">
             <div class="text-center mb-12">
                 <h3 class="text-base font-bold text-[#F87171] tracking-wider">EPOCH 4</h3>
@@ -630,8 +709,13 @@
                 </div>
             </div>
              <div class="mt-12 text-center space-x-2 sm:space-x-4 flex flex-wrap justify-center gap-2">
-                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: LLMs & Diffusion]</button>
-                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Explore Generative Math]</button>
+                 <!-- Group 1: Core Paradigms & Math -->
+                 <div class="flex space-x-2 sm:space-x-4">
+                    <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: LLMs & Diffusion]</button>
+                    <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Explore Generative Math]</button>
+                 </div>
+                 <!-- Group 2: Specific Innovation -->
+                 <button class="details-toggle-btn px-6 py-2 bg-red-100 text-red-700 font-semibold rounded-full text-sm">[Deep Dive: Generative Retrieval]</button>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg">
                 <div class="border-b border-slate-300">
@@ -716,6 +800,40 @@
                 </div>
             </div>
             <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
+                <h4 class="pt-4 text-slate-800">Deep Dive: Recommender Systems with Generative Retrieval</h4>
+                <p>This paradigm tackles the core challenge of large-scale generative recommenders: **Speed and Scale**. Running an LLM to generate recommendations is too slow, especially in the crucial **retrieval** (candidate selection) stage that precedes the final ranking.</p>
+
+                <h5 class="text-slate-700">The Core Problem Solved: Scalable Retrieval for LLMs</h5>
+                <p>In the standard generative approach, an LLM generates a sequence of tokens representing item IDs. For this to work efficiently, the item IDs must be structured in a way that allows the model to search through millions of items quickly. Standard item IDs (like `Movie-7281`) are arbitrary and unhelpful.</p>
+
+                <h5 class="text-slate-700">Mechanism: Generative Retrieval & Semantic IDs</h5>
+                <div class="bg-blue-100 border-l-4 border-blue-600 p-4 rounded mb-4">
+                    <strong class="text-blue-800">Core Mechanism (Abstract Summary):</strong>
+                    <p class="mt-1 text-base">"We propose a novel **generative retrieval approach**, where the retrieval model **autoregressively decodes the identifiers of the target candidates**. To that end, we create semantically meaningful tuple of codewords to serve as a **Semantic ID** for each item. Given Semantic IDs for items in a user session, a **Transformer-based sequence-to-sequence model** is trained to predict the Semantic ID of the next item that the user will interact with."</p>
+                </div>
+                
+                <p>This approach moves from a slow **Search** process to a fast **Generation** process:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                    <div class="bg-sky-50 border-l-4 border-sky-400 p-4 rounded">
+                        <strong class="text-sky-800">Traditional Retrieval (Discriminative)</strong>
+                        <p class="text-sm mt-1">Generate a **query vector** from the user/history. Use vector databases (FAISS, HNSW) to **search** for similar items in a separate database. This is a *separate, slow* step.</p>
+                    </div>
+                    <div class="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded">
+                        <strong class="text-emerald-800">Generative Retrieval (This Paradigm)</strong>
+                        <p class="text-sm mt-1">The LLM directly **generates a sequence of Semantic ID tokens**. The **Semantic ID** (a tuple of codewords) encodes the item's embedding directly into the model's vocabulary, meaning the generation *is* the retrieval.</p>
+                    </div>
+                </div>
+                
+
+                <h5 class="text-slate-700">Mechanism: Dual-Stage Training (The "S-ID" Trick)</h5>
+                <p>The model is trained in two stages to bridge the semantic meaning of the item to its actual ID tokens:</p>
+                <ol>
+                    <li><strong>Stage 1: Semantic Quantization:</strong> An **encoder** network converts the item's rich feature vector (its true semantic meaning) into a **quantized** vector—a short, lossy representation of that meaning. This quantized vector is then mapped to a sequence of discrete tokens (the S-ID).</li>
+                    <li><strong>Stage 2: Generative Training:** An LLM is trained to perform standard sequential recommendation, but instead of predicting an arbitrary ID, it predicts the *sequence of S-ID tokens* that represents the next item.</li>
+                </ol>
+                <p>Because the S-IDs are semantic, the LLM only needs to generate a few tokens that describe the item's **conceptual neighborhood**. This allows the model to efficiently generate items that are highly relevant to the user's intent, effectively turning the computationally expensive **search** process into a fast, direct **generation** process by the LLM itself.</p>
+            </div>
+            <div class="details-panel bg-slate-50/50 rounded-lg prose max-w-none lg:prose-lg">
                 <h4 class="pt-4 text-slate-800">Mathematical Deep Dive: Generative Architectures</h4>
                 
                 <h5 class="text-slate-700">1. VAEs (The Classic Approach)</h5>
@@ -730,6 +848,7 @@
                 \[ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V \]
                 <p>The model's training objective is then to simply minimize the <strong>Cross-Entropy Loss</strong> (or Negative Log-Likelihood) between the model's predicted probability for the next item and the actual item (\(y_i\)) that the user interacted with.</p>
                 \[ L_{CE} = -\sum_{i=1}^{N} \log P(y_i | \text{history}) \]
+                
 
                 <hr class="my-6">
 
@@ -738,6 +857,7 @@
                 <p>The model \(\epsilon_\theta\) is a neural network (like a UNet) that is fed the noisy user vector at step \(t\) (which is \(\mathbf{x}_t\)) and the timestep \(t\). Its job is to output a vector that is as close as possible to the *original noise* (\(\epsilon\)) that was added to create this specific version. The training objective is a simple **Mean Squared Error (L2 Loss)** between the *real* noise and the *predicted* noise:</p>
                 \[ L_{simple} = \mathbb{E}_{t, \mathbf{x}_0, \epsilon} \left[ \left\| \epsilon - \epsilon_\theta(\mathbf{x}_t, t) \right\|^2 \right] \]
                 <p>At recommendation time, the model uses this noise-predictor in reverse to "denoise" a random vector step-by-step (guided by user context) until a clean preference vector emerges.</p>
+                
 
             </div>
         </section>
@@ -1044,4 +1164,3 @@
     </script>
 </body>
 </html>
-
