@@ -3,34 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code the Rabbit!</title>
+    <title>Coding is Magic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;700&family=Afacad%20Flux:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        /* 1. THE SETUP */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-            background-color: #f0f8ff;
+            background-color: #e2e8f0;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            place-items: center;
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .slide-container {
+            align-items: center;
+            background-color: #eee;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 32px;
+            position: relative;
+            width: 1280px;
+        }
+
+        /* 2. CONSISTENT TYPOGRAPHY (Theme 2) */
+        .slide-container h1,
+        .slide-container h2 {
+            font-family: 'Comfortaa';
+            color: #1e293b;
+        }
+
+        .slide-container p,
+        .slide-container li,
+        .slide-container h3,
+        .game-ui-text {
+            font-family: 'Afacad Flux';
+            color: #000;
+        }
+
+        .slide-container h2.slide-title {
+            font-size: 57px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .slide-container p,
+        .slide-container li {
+            font-weight: 500;
+            font-size: 28px;
+            line-height: 1.4;
+            letter-spacing: 0.02px;
+        }
+
+        .content-area {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* 3. LAYOUTS */
+        .two-column {
+            display: flex;
+            width: 100%;
+            gap: 40px;
+            height: 500px;
+        }
+
+        .two-column > div {
+            flex: 1;
+        }
+
+        .two-column .text-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .two-column .content-box {
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 30px;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .two-column .image-column {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* GAME STYLES (Scoped to Slide 2) */
+        #game-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            background-color: #fdd5bd; /* Theme Peach */
+            border-radius: 30px;
+            padding: 30px;
+        }
+
+        #game-board-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
         }
 
-        h1 { color: #333; margin-bottom: 10px; }
-        p { color: #666; font-size: 1.2rem; margin-bottom: 20px; }
-
-        /* The Game Board */
         #game-board {
             display: grid;
             grid-template-columns: repeat(4, 80px);
             grid-template-rows: repeat(4, 80px);
-            gap: 5px;
-            background-color: #8fbc8f;
+            gap: 8px;
+            background-color: #a5d6a7; /* Soft Green */
             padding: 10px;
             border-radius: 15px;
-            box-shadow: 0 10px 0 #556b2f;
+            box-shadow: 0 8px 0 #66bb6a;
             position: relative;
-            margin-bottom: 20px;
         }
 
         .cell {
@@ -39,214 +168,277 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 45px;
             width: 80px;
             height: 80px;
         }
 
-        /* The Player and Goal */
-        .rabbit { transition: all 0.5s ease; z-index: 10; }
-        .carrot { z-index: 5; }
+        #game-controls-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 400px;
+        }
 
-        /* The "Code" Display Area */
         #code-display {
             background-color: #fff;
-            border: 3px dashed #ccc;
-            border-radius: 10px;
-            min-height: 60px;
-            width: 90%;
-            max-width: 400px;
+            border: 4px dashed #ff823a; /* Theme Orange */
+            border-radius: 15px;
+            height: 80px;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-start;
             padding: 10px;
             overflow-x: auto;
             margin-bottom: 20px;
-            gap: 5px;
+            gap: 8px;
         }
-        
+
         .code-step {
             background-color: #ffcc00;
-            border-radius: 5px;
-            padding: 5px 10px;
-            font-size: 20px;
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 24px;
             font-weight: bold;
             box-shadow: 2px 2px 0 #cc9900;
+            flex-shrink: 0;
         }
 
-        /* Control Buttons */
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 400px;
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            place-items: center;
         }
 
-        button {
+        .btn-game {
             border: none;
-            border-radius: 10px;
-            padding: 15px 20px;
-            font-size: 24px;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 28px;
             cursor: pointer;
             transition: transform 0.1s;
-            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            width: 80px;
+            height: 80px;
+            display: grid;
+            place-items: center;
         }
 
-        button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+        .btn-game:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+        .btn-arrow { background-color: #4facfe; color: white; } /* Blue */
+        
+        .btn-go { 
+            background-color: #43e97b; 
+            color: white; 
+            width: 100%; 
+            font-family: 'Comfortaa'; 
+            font-weight: 700; 
+            font-size: 24px; 
+            grid-column: span 3; 
+            margin-top: 10px;
+        }
 
-        .btn-arrow { background-color: #4facfe; color: white; }
-        .btn-go { background-color: #43e97b; color: white; width: 100%; font-weight: bold; margin-top: 10px;}
-        .btn-reset { background-color: #ff6b6b; color: white; font-size: 18px; padding: 10px;}
+        /* Updated Button Styles for Clear/Reset */
+        .btn-clear { 
+            background-color: #ff9f1c; /* Orange */
+            color: white; 
+            font-size: 20px; 
+            width: 100%; 
+            font-family: 'Comfortaa';
+            grid-column: span 2; 
+        }
+        
+        .btn-reset { 
+            background-color: #ff6b6b; /* Red */
+            color: white; 
+            font-size: 20px; 
+            width: 100%; 
+            font-family: 'Comfortaa';
+            grid-column: span 1;
+        }
 
-        /* Success Message */
-        #message {
-            position: fixed;
+        /* Win Message Overlay */
+        #win-message {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: #fff;
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            font-size: 2rem;
-            display: none;
-            z-index: 100;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             text-align: center;
+            z-index: 100;
+            display: none;
+            border: 5px solid #43e97b;
         }
+        #win-message h3 { font-size: 40px; color: #1e293b; margin: 0 0 20px 0; }
         
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; z-index: 99;
-        }
+        /* Specific Slide Colors */
+        #slide1 { background-color: #dcfd8b; } /* Lime */
+        #slide2 { background-color: #bc84ee; } /* Purple */
 
     </style>
 </head>
 <body>
 
-    <h1>🐰 The Hungry Rabbit</h1>
-    <p>Help the rabbit get to the carrot!</p>
+<!-- Slide 2: Interactive Game -->
+<div class="slide-container" id="slide2">
+    <h2 class="slide-title" style="color: white; text-shadow: 0 2px 0 rgba(0,0,0,0.1);">Mission: Feed the Rabbit! 🐰</h2>
+    <div class="content-area">
+        <div id="game-wrapper">
+            
+            <!-- Left: Game Board -->
+            <div id="game-board-container">
+                <div id="game-board"></div>
+            </div>
 
-    <div id="game-board"></div>
+            <!-- Right: Controls & Code -->
+            <div id="game-controls-container">
+                <div style="width: 100%; text-align: left; margin-bottom: 5px; font-weight: bold; color: #555; font-family: 'Comfortaa'">Your Spell (Code):</div>
+                <div id="code-display"></div>
 
-    <div>My Program:</div>
-    <div id="code-display"></div>
+                <div class="controls-grid">
+                    <!-- D-Pad Layout -->
+                    <div style="grid-column: 2;">
+                        <button class="btn-game btn-arrow" onclick="game.add('up')"><i class="fa-solid fa-arrow-up"></i></button>
+                    </div>
+                    <div style="grid-column: 1; grid-row: 2;">
+                        <button class="btn-game btn-arrow" onclick="game.add('left')"><i class="fa-solid fa-arrow-left"></i></button>
+                    </div>
+                    <div style="grid-column: 2; grid-row: 2;">
+                        <button class="btn-game btn-arrow" onclick="game.add('down')"><i class="fa-solid fa-arrow-down"></i></button>
+                    </div>
+                    <div style="grid-column: 3; grid-row: 2;">
+                        <button class="btn-game btn-arrow" onclick="game.add('right')"><i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
 
-    <div class="controls">
-        <button class="btn-arrow" onclick="addCommand('up')">⬆️</button>
-        <button class="btn-arrow" onclick="addCommand('down')">⬇️</button>
-        <button class="btn-arrow" onclick="addCommand('left')">⬅️</button>
-        <button class="btn-arrow" onclick="addCommand('right')">➡️</button>
-        <button class="btn-reset" onclick="resetGame()">❌ Reset</button>
-        <button class="btn-go" onclick="runCode()">🟢 GO!</button>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-    <div id="message">
-        🎉 YUMMY! 🎉<br>
-        <button class="btn-go" style="margin-top:20px" onclick="resetGame()">Play Again</button>
-    </div>
-
-    <script>
-        // Game State
-        const gridSize = 4;
-        let rabbitPos = { x: 0, y: 0 };
-        let carrotPos = { x: 3, y: 3 };
-        let commands = [];
-        let isRunning = false;
-
-        // Initialize Board
-        const board = document.getElementById('game-board');
-        
-        function drawBoard() {
-            board.innerHTML = '';
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
+                    <!-- Action Buttons -->
+                    <button class="btn-game btn-go" onclick="game.run()">✨ CAST SPELL (GO!) ✨</button>
                     
-                    if (x === rabbitPos.x && y === rabbitPos.y) {
+                    <!-- Bottom Row: Clear & Reset -->
+                    <button class="btn-game btn-clear" onclick="game.clearInstructions()">🧹 Clear Code</button>
+                    <button class="btn-game btn-reset" onclick="game.reset()">New Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Popup -->
+    <div id="win-message">
+        <h3>🎉 YUMMY! 🎉</h3>
+        <button class="btn-game btn-go" onclick="game.reset(); document.getElementById('win-message').style.display='none'">Play Again</button>
+    </div>
+</div>
+
+<script>
+    // Namespace the game to avoid global scope pollution
+    const game = {
+        gridSize: 4,
+        rabbit: { x: 0, y: 0 },
+        carrot: { x: 3, y: 3 },
+        commands: [],
+        isRunning: false,
+        boardEl: document.getElementById('game-board'),
+        codeEl: document.getElementById('code-display'),
+
+        init: function() {
+            this.draw();
+        },
+
+        draw: function() {
+            this.boardEl.innerHTML = '';
+            for (let y = 0; y < this.gridSize; y++) {
+                for (let x = 0; x < this.gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (x === this.rabbit.x && y === this.rabbit.y) {
                         cell.innerHTML = '🐰';
-                    } else if (x === carrotPos.x && y === carrotPos.y) {
+                    } else if (x === this.carrot.x && y === this.carrot.y) {
                         cell.innerHTML = '🥕';
                     }
-                    board.appendChild(cell);
+                    this.boardEl.appendChild(cell);
                 }
             }
-        }
+        },
 
-        // Add Command to the list
-        function addCommand(direction) {
-            if (isRunning) return;
-            commands.push(direction);
-            updateCodeDisplay();
-        }
+        add: function(dir) {
+            if (this.isRunning) return;
+            this.commands.push(dir);
+            this.updateDisplay();
+        },
 
-        // Update the visual "code" bar
-        function updateCodeDisplay() {
-            const display = document.getElementById('code-display');
-            display.innerHTML = '';
-            commands.forEach(cmd => {
+        updateDisplay: function() {
+            this.codeEl.innerHTML = '';
+            this.commands.forEach(cmd => {
                 const span = document.createElement('span');
-                span.classList.add('code-step');
-                if(cmd === 'up') span.innerText = '⬆️';
-                if(cmd === 'down') span.innerText = '⬇️';
-                if(cmd === 'left') span.innerText = '⬅️';
-                if(cmd === 'right') span.innerText = '➡️';
-                display.appendChild(span);
+                span.className = 'code-step';
+                const icons = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
+                span.innerText = icons[cmd];
+                this.codeEl.appendChild(span);
             });
-        }
+            // Auto scroll to right
+            this.codeEl.scrollLeft = this.codeEl.scrollWidth;
+        },
 
-        // Run the Code!
-        async function runCode() {
-            if (commands.length === 0 || isRunning) return;
-            isRunning = true;
+        // NEW: Clears instructions but keeps rabbit location
+        clearInstructions: function() {
+            if (this.isRunning) return;
+            this.commands = [];
+            this.updateDisplay();
+        },
 
-            for (let cmd of commands) {
-                await new Promise(r => setTimeout(r, 500)); // Wait half a second
-                moveRabbit(cmd);
-                drawBoard();
+        run: async function() {
+            if (this.commands.length === 0 || this.isRunning) return;
+            this.isRunning = true;
+
+            for (let cmd of this.commands) {
+                await new Promise(r => setTimeout(r, 500));
                 
+                // Move logic
+                if (cmd === 'up' && this.rabbit.y > 0) this.rabbit.y--;
+                if (cmd === 'down' && this.rabbit.y < this.gridSize - 1) this.rabbit.y++;
+                if (cmd === 'left' && this.rabbit.x > 0) this.rabbit.x--;
+                if (cmd === 'right' && this.rabbit.x < this.gridSize - 1) this.rabbit.x++;
+
+                this.draw();
+
                 // Check Win
-                if (rabbitPos.x === carrotPos.x && rabbitPos.y === carrotPos.y) {
-                    document.getElementById('message').style.display = 'block';
-                    document.getElementById('overlay').style.display = 'block';
+                if (this.rabbit.x === this.carrot.x && this.rabbit.y === this.carrot.y) {
+                    document.getElementById('win-message').style.display = 'block';
+                    this.isRunning = false;
                     return;
                 }
             }
-            isRunning = false;
-        }
+            this.isRunning = false;
+        },
 
-        // Logic to move the rabbit
-        function moveRabbit(direction) {
-            if (direction === 'up' && rabbitPos.y > 0) rabbitPos.y--;
-            if (direction === 'down' && rabbitPos.y < gridSize - 1) rabbitPos.y++;
-            if (direction === 'left' && rabbitPos.x > 0) rabbitPos.x--;
-            if (direction === 'right' && rabbitPos.x < gridSize - 1) rabbitPos.x++;
-        }
-
-        // Reset Game
-        function resetGame() {
-            rabbitPos = { x: 0, y: 0 };
-            // Randomize carrot position for replayability (not on 0,0)
+        reset: function() {
+            this.rabbit = { x: 0, y: 0 };
+            // Ensure carrot isn't on rabbit
             do {
-                carrotPos = { 
-                    x: Math.floor(Math.random() * gridSize), 
-                    y: Math.floor(Math.random() * gridSize) 
+                this.carrot = { 
+                    x: Math.floor(Math.random() * this.gridSize), 
+                    y: Math.floor(Math.random() * this.gridSize) 
                 };
-            } while (carrotPos.x === 0 && carrotPos.y === 0);
+            } while (this.carrot.x === 0 && this.carrot.y === 0);
 
-            commands = [];
-            isRunning = false;
-            document.getElementById('message').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-            drawBoard();
-            updateCodeDisplay();
+            this.commands = [];
+            this.isRunning = false;
+            document.getElementById('win-message').style.display = 'none';
+            this.draw();
+            this.updateDisplay();
         }
+    };
 
-        // Start
-        drawBoard();
+    // Start game on load
+    game.init();
+</script>
 
-    </script>
 </body>
 </html>
+```
