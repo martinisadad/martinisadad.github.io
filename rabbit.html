@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code the Rabbit!</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 1.2rem; margin-bottom: 20px; }
+
+        /* The Game Board */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 5px;
+            background-color: #8fbc8f;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 10px 0 #556b2f;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            background-color: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            width: 80px;
+            height: 80px;
+        }
+
+        /* The Player and Goal */
+        .rabbit { transition: all 0.5s ease; z-index: 10; }
+        .carrot { z-index: 5; }
+
+        /* The "Code" Display Area */
+        #code-display {
+            background-color: #fff;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            min-height: 60px;
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        
+        .code-step {
+            background-color: #ffcc00;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 2px 2px 0 #cc9900;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 400px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+        }
+
+        button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+
+        .btn-arrow { background-color: #4facfe; color: white; }
+        .btn-go { background-color: #43e97b; color: white; width: 100%; font-weight: bold; margin-top: 10px;}
+        .btn-reset { background-color: #ff6b6b; color: white; font-size: 18px; padding: 10px;}
+
+        /* Success Message */
+        #message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            font-size: 2rem;
+            display: none;
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; z-index: 99;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🐰 The Hungry Rabbit</h1>
+    <p>Help the rabbit get to the carrot!</p>
+
+    <div id="game-board"></div>
+
+    <div>My Program:</div>
+    <div id="code-display"></div>
+
+    <div class="controls">
+        <button class="btn-arrow" onclick="addCommand('up')">⬆️</button>
+        <button class="btn-arrow" onclick="addCommand('down')">⬇️</button>
+        <button class="btn-arrow" onclick="addCommand('left')">⬅️</button>
+        <button class="btn-arrow" onclick="addCommand('right')">➡️</button>
+        <button class="btn-reset" onclick="resetGame()">❌ Reset</button>
+        <button class="btn-go" onclick="runCode()">🟢 GO!</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div id="message">
+        🎉 YUMMY! 🎉<br>
+        <button class="btn-go" style="margin-top:20px" onclick="resetGame()">Play Again</button>
+    </div>
+
+    <script>
+        // Game State
+        const gridSize = 4;
+        let rabbitPos = { x: 0, y: 0 };
+        let carrotPos = { x: 3, y: 3 };
+        let commands = [];
+        let isRunning = false;
+
+        // Initialize Board
+        const board = document.getElementById('game-board');
+        
+        function drawBoard() {
+            board.innerHTML = '';
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    
+                    if (x === rabbitPos.x && y === rabbitPos.y) {
+                        cell.innerHTML = '🐰';
+                    } else if (x === carrotPos.x && y === carrotPos.y) {
+                        cell.innerHTML = '🥕';
+                    }
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        // Add Command to the list
+        function addCommand(direction) {
+            if (isRunning) return;
+            commands.push(direction);
+            updateCodeDisplay();
+        }
+
+        // Update the visual "code" bar
+        function updateCodeDisplay() {
+            const display = document.getElementById('code-display');
+            display.innerHTML = '';
+            commands.forEach(cmd => {
+                const span = document.createElement('span');
+                span.classList.add('code-step');
+                if(cmd === 'up') span.innerText = '⬆️';
+                if(cmd === 'down') span.innerText = '⬇️';
+                if(cmd === 'left') span.innerText = '⬅️';
+                if(cmd === 'right') span.innerText = '➡️';
+                display.appendChild(span);
+            });
+        }
+
+        // Run the Code!
+        async function runCode() {
+            if (commands.length === 0 || isRunning) return;
+            isRunning = true;
+
+            for (let cmd of commands) {
+                await new Promise(r => setTimeout(r, 500)); // Wait half a second
+                moveRabbit(cmd);
+                drawBoard();
+                
+                // Check Win
+                if (rabbitPos.x === carrotPos.x && rabbitPos.y === carrotPos.y) {
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('overlay').style.display = 'block';
+                    return;
+                }
+            }
+            isRunning = false;
+        }
+
+        // Logic to move the rabbit
+        function moveRabbit(direction) {
+            if (direction === 'up' && rabbitPos.y > 0) rabbitPos.y--;
+            if (direction === 'down' && rabbitPos.y < gridSize - 1) rabbitPos.y++;
+            if (direction === 'left' && rabbitPos.x > 0) rabbitPos.x--;
+            if (direction === 'right' && rabbitPos.x < gridSize - 1) rabbitPos.x++;
+        }
+
+        // Reset Game
+        function resetGame() {
+            rabbitPos = { x: 0, y: 0 };
+            // Randomize carrot position for replayability (not on 0,0)
+            do {
+                carrotPos = { 
+                    x: Math.floor(Math.random() * gridSize), 
+                    y: Math.floor(Math.random() * gridSize) 
+                };
+            } while (carrotPos.x === 0 && carrotPos.y === 0);
+
+            commands = [];
+            isRunning = false;
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            drawBoard();
+            updateCodeDisplay();
+        }
+
+        // Start
+        drawBoard();
+
+    </script>
+</body>
+</html>
